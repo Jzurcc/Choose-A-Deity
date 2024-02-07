@@ -12,3 +12,4 @@ D:\Downloads\CC3\Choose A Deity\obj\Debug\net8.0\refint\Choose A Deity.dll
 D:\Downloads\CC3\Choose A Deity\obj\Debug\net8.0\Choose A Deity.pdb
 D:\Downloads\CC3\Choose A Deity\obj\Debug\net8.0\Choose A Deity.genruntimeconfig.cache
 D:\Downloads\CC3\Choose A Deity\obj\Debug\net8.0\ref\Choose A Deity.dll
+D:\Downloads\CC3\Choose A Deity\obj\Debug\net8.0\Choose A Deity.sourcelink.json
