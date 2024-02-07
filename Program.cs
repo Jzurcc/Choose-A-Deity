@@ -2,38 +2,27 @@
 using static System.Threading.Thread;
 
 class Program {
-public class Deity {
-    private string Name;
-    private int tSpeed;
-    private int tDuration;
-    private ConsoleColor Color;
-
-    public Deity(int speed = 40, int duration = 600, ConsoleColor color = ConsoleColor.White, string name = "???") {
-        this.tSpeed = speed;
-        this.tDuration = duration;
-        this.Color = color;
-        this.Name = name;
-    }
+public class Deity(int speed = 40, int duration = 600, ConsoleColor color = ConsoleColor.White, string name = "???") {
+    private string Name = name;
+    private int tSpeed = speed;
+    private int tDuration = duration;
+    private ConsoleColor Color = color;
 
     public void Talk(string str) {
         Program.Print(str, tSpeed, tDuration, Color, Name);
     }
 }
 
-public class Player {
-    private string Name;
-    private string Job;
-    private int tSpeed;
-    private int tDuration;
-    private ConsoleColor Color;
+public class Player(int speed = 40, int duration = 600, ConsoleColor color = ConsoleColor.White, string name = "???")
+    {
+    private string Name = name;
+    private string Job = "";
+    private int tSpeed = speed;
+    private int tDuration = duration;
+    private ConsoleColor Color = color;
     private int HP, DEF, ATK, INT, SPD, EXP, LCK, GLD;
-    public Player(int speed = 40, int duration = 600, ConsoleColor color = ConsoleColor.White, string name = "???") {
-        this.tSpeed = speed;
-        this.tDuration = duration;
-        this.Color = color;
-        this.Name = name;
-    }
-    public void Talk(string str) {
+
+        public void Talk(string str) {
         Program.Print(str, tSpeed, tDuration, Color, Name);
     }
 }
@@ -57,6 +46,7 @@ static void Main() {
     Deity Wanderer = new Deity(40, 600, ConsoleColor.Black, "The Wanderer");
 
     Player.Talk("I must choose a deity.");
+
     End.Talk("Find solace in the inevitable.");
     Wisened.Talk("Seek forbidden knowledge.");
     Wanderer.Talk("Protection for a price.");
