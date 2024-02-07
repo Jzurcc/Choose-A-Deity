@@ -81,9 +81,13 @@ public class Player {
         Program.Print(String.Format("[{0}]", str), tspeed, tduration, ConsoleColor.White);
     }
 
-    public void Move(int dx, int dy) {
-        X += dx;
-        Y += dy;
+    public void Move(int dx, int dy, Tile[,] map, int xSize, int ySize) {
+        int newX = X + dx;
+        int newY = Y + dy;
+        if (newX >= 0 && newX < xSize && newY >= 0 && newY < ySize && map[newX, newY].Type != TileType.Wall) {
+            X = newX;
+            Y = newY;
+        }
     }
 
     public void setDeity(string deity) {
@@ -154,7 +158,7 @@ public static void WandererRoute() {
 public static void StartRun() {
     int xSize = 13;
     int ySize = 13;
-    Tile[,] map = new Tile[13, 13];
+    Tile[,] map = new Tile[xSize, ySize];
     for (int i = 0; i < xSize; i++) {
         for (int j = 0; j < ySize; j++)
         {
@@ -169,69 +173,56 @@ public static void StartRun() {
 
     bool running = true;
     while (running) {
-                // Print the map
-                for (int i = 0; i < xSize; i++) {
-                    for (int j = 0; j < ySize; j++) {
+        Console.Clear();
+        // Print the map
+        PrintMap(xSize, ySize, map);
 
-                        if (player.X == i && player.Y == j) {
-                            Console.Write("P ");
-                        }
-                        else
-                        {
-                            if (map[i, j].Type == TileType.Empty) {
-                                Console.Write(". ");
-                            }
-                            else
-                            {
-                                Console.Write("# ");
-                            }
-                        }
-                    }
-                    Console.WriteLine();
-                }
+        // Get player input
+        Console.WriteLine("Enter direction (WASD):");
+        char input = Console.ReadKey().KeyChar;
+        Console.WriteLine();
 
-                // Get player input
-                Console.WriteLine("Enter direction (WASD):");
-                char input = Console.ReadKey().KeyChar;
-                Console.WriteLine();
-
-                // Move the player
-                switch (input) {
-                    case 'w':
-                        if (player.X > 0 && map[player.X - 1, player.Y].Type != TileType.Wall)
-                        {
-                            player.Move(-1, 0);
-                        }
-                        break;
-                    case 'a':
-                        if (player.Y > 0 && map[player.X, player.Y - 1].Type != TileType.Wall)
-                        {
-                            player.Move(0, -1);
-                        }
-                        break;
-                    case 's':
-                        if (player.X < ySize-1 && map[player.X + 1, player.Y].Type != TileType.Wall)
-                        {
-                            player.Move(1, 0);
-                        }
-                        break;
-                    case 'd':
-                        if (player.Y < xSize-1 && map[player.X, player.Y + 1].Type != TileType.Wall)
-                        {
-                            player.Move(0, 1);
-                        }
-                        break;
-                    case 'q':
-                        running = false;
-                        break;
-                }
-
-                // Clear the console
-                Console.Clear();
+        // Move the player
+        switch (input) {
+            case 'w':
+                player.Move(-1, 0, map, xSize, ySize);
+                break;
+            case 'a':
+                player.Move(0, -1, map, xSize, ySize);
+                break;
+            case 's':
+                player.Move(1, 0, map, xSize, ySize);
+                break;
+            case 'd':
+                player.Move(0, 1, map, xSize, ySize);
+                break;
+            case 'q':
+                running = false;
+                break;
+        }     
     }
 }
 
-
+public static void PrintMap(int xSize, int ySize, Tile[,] map) {
+    for (int i = 0; i < xSize; i++) {
+        for (int j = 0; j < ySize; j++) {
+            if (player.X == i && player.Y == j) {
+                Console.Write("P ");
+            }
+            else
+            {
+                if (map[i, j].Type == TileType.Empty) {
+                    Console.Write(". ");
+                }
+                else
+                {
+                    Console.Write("# ");
+                }
+            }
+        }
+        Console.WriteLine();
+    }
+}
 
 public static void Print(string str, int speed = 5, int duration = 5, ConsoleColor color = ConsoleColor.White, string name = "") {
     Console.ForegroundColor = color;
