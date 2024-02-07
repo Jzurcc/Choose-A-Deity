@@ -13,10 +13,14 @@ public class Tile {
 public class Program {
     // Global variables
     public static Player player = new(5, 5, ConsoleColor.White, "Player");
+    public static Enemy enemy = new(5, 5);
      public static Deity End = new(50, 1000, ConsoleColor.Black, "The End");
      public static Deity Wisened = new(30, 1000, ConsoleColor.DarkMagenta, "The Wisened");
      public static Deity Wanderer = new(5, 5, ConsoleColor.DarkRed, "The Wanderer"); // 42, 1300
      public static Deity Harvest = new(55, 1000, ConsoleColor.DarkGreen, "The Harvest");
+     public static Tile[,]? map;
+     public static Random rng = new();
+     public static int xSize = 13, ySize = 26;
 
 public class Deity {
     public int tspeed, tduration;
@@ -34,7 +38,35 @@ public class Deity {
         Program.Print(str, tspeed, tduration, color, name);
     }
 }
+public class Enemy {
+    public int X, Y;
 
+    public Enemy(int x, int y) {
+        X = x;
+        Y = y;
+    }
+
+    // Method to randomly move the enemy
+    public void MoveRandom() {
+        int[] dx = { -1, 0, 1, 0 }; // Up, Right, Down, Left
+        int[] dy = { 0, 1, 0, -1 };
+
+        // Attempt to move in a random direction
+        for (int attempts = 0; attempts < 4; attempts++) {
+            int direction = rng.Next(4);
+            int newX = X + dx[direction];
+            int newY = Y + dy[direction];
+
+            // Check if the new position is within bounds and not a wall
+            if (newX >= 0 && newX < xSize && newY >= 0 && newY < ySize && map[newX, newY].Type != TileType.Wall)
+            {
+                X = newX;
+                Y = newY;
+                break; // Successfully moved
+            }
+        }
+    }
+}
 
 public class Player {
     public int tspeed, tduration;
@@ -156,9 +188,7 @@ public static void WandererRoute() {
     StartRun();
 }
 public static void StartRun() {
-    int xSize = 13;
-    int ySize = 13;
-    Tile[,] map = new Tile[xSize, ySize];
+    map = new Tile[xSize, ySize];
     for (int i = 0; i < xSize; i++) {
         for (int j = 0; j < ySize; j++)
         {
@@ -171,46 +201,48 @@ public static void StartRun() {
     map[4, 3] = new Tile(TileType.Wall);
     map[4, 4] = new Tile(TileType.Wall);
 
-    bool running = true;
-    while (running) {
+    bool flag = true;
+    while (flag) {
         Console.Clear();
-        // Print the map
-        PrintMap(xSize, ySize, map);
-
-        // Get player input
-        Console.WriteLine("Enter direction (WASD):");
-        char input = Console.ReadKey().KeyChar;
-        Console.WriteLine();
-
-        // Move the player
-        switch (input) {
-            case 'w':
-                player.Move(-1, 0, map, xSize, ySize);
-                break;
-            case 'a':
-                player.Move(0, -1, map, xSize, ySize);
-                break;
-            case 's':
-                player.Move(1, 0, map, xSize, ySize);
-                break;
-            case 'd':
-                player.Move(0, 1, map, xSize, ySize);
-                break;
-            case 'q':
-                running = false;
-                break;
-        }     
+        PrintMap();
+        flag = ProcessInput();  
+        if (rng.Next(2) == 0) 
+                enemy.MoveRandom();  
     }
 }
 
-public static void PrintMap(int xSize, int ySize, Tile[,] map) {
+public static bool ProcessInput() {
+    Console.WriteLine("Enter direction (WASD): ");
+    char input = Console.ReadKey().KeyChar;
+    Console.WriteLine();
+    
+    switch (input) {
+        case 'w':
+            player.Move(-1, 0, map, xSize, ySize);
+            break;
+        case 'a':
+            player.Move(0, -1, map, xSize, ySize);
+            break;
+        case 's':
+            player.Move(1, 0, map, xSize, ySize);
+            break;
+        case 'd':
+            player.Move(0, 1, map, xSize, ySize);
+            break;
+        case 'q':
+            return false;
+    }
+    return true;
+}
+
+public static void PrintMap() {
     for (int i = 0; i < xSize; i++) {
         for (int j = 0; j < ySize; j++) {
-            if (player.X == i && player.Y == j) {
-                Console.Write("P ");
-            }
-            else
-            {
+            if (player.X == i && player.Y == j)
+                Console.Write("Y ");
+            else if (enemy.X == i &&  enemy.Y == j)
+                Console.Write("? ");
+            else {
                 if (map[i, j].Type == TileType.Empty) {
                     Console.Write(". ");
                 }
