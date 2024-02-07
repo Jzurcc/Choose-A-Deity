@@ -24,19 +24,20 @@ public class Deity(int speed = 40, int duration = 600, ConsoleColor color = Cons
 
 
 public class Player(int speed = 35, int duration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
-    private string Name = name;
-    private static dynamic Deity;
-    private string DeityName = "None"; // Job equivalent
+    public string Name = name;
+    public string DeityName = "None"; // Job equivalent
     // Attributes properties
-    private int HP, ATK, DEF, INT, SPD, LCK, GOLD, EXP;
+    public int HP = 10, ATK = 10, DEF = 10, INT = 10, SPD = 10, LCK = 10, GLD = 100, EXP = 0;
     // Specific stats
-    private int Health, Damage, Armor;
+    public double Health = 20 + HP*8, maxHealth = 15 + HP*3, Damage, Armor = DEF*1.5;
 
     // Dialogue properties
     private int tSpeed = speed;
     private int tDuration = duration;
     private ConsoleColor Color = color;
+    // Player methods
     public void Talk(string str) {
+
         Program.Print(str, tSpeed, tDuration, Color, Name);
     }
 
@@ -52,10 +53,9 @@ public class Player(int speed = 35, int duration = 450, ConsoleColor color = Con
         if (deity != "None")
             DeityName = "The" + deity.ToString();
     }
-
-    // public void Narrate(string str) {
-    //     Program.Print(String.Format("[{0}]", str), tSpeed-10, tDuration, ConsoleColor.White);
-    // }
+    public class Deity(string name) {
+        public string Name = name;
+    }
 }
 
 public static bool ChooseDeity(string chosen) {
@@ -83,7 +83,7 @@ public static void WandererRoute() {
     player.Think("...");
     Sleep(800);
     Wanderer.Talk("BWAHAHAHAHAHA!");
-    player.Think("A monstrous horned-figure wearing a devilish armor approached...");
+    player.Think("A monstrous horned-figure wearing devilish armor approached...");
     Wanderer.Name = "The Wanderer";
     Wanderer.Talk("BLEED FOR YOUR MASTER, FOOL!");
     player.Narrate("\nYou chose The Wanderer as your Deity.");
@@ -91,7 +91,9 @@ public static void WandererRoute() {
     player.Narrate("Effects: ++ HP, + DEF, - GLD, - ATK, - SPD");
 }
 
-
+public static void ChangeStats(params int[] stats) {
+    Console.WriteLine(Player.HP);
+}
 
 public static void Print(string str, int speed = 40, int duration = 600, ConsoleColor color = ConsoleColor.White, string name = "") {
     Console.ForegroundColor = color;
