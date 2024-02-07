@@ -198,25 +198,25 @@ public static void StartRun() {
                 // Move the player
                 switch (input) {
                     case 'w':
-                        if (player.Y > 0 && map[player.X - 1, player.Y].Type != TileType.Wall)
+                        if (player.X > 0 && map[player.X - 1, player.Y].Type != TileType.Wall)
                         {
                             player.Move(-1, 0);
                         }
                         break;
                     case 'a':
-                        if (player.X > 0 && map[player.X, player.Y - 1].Type != TileType.Wall)
+                        if (player.Y > 0 && map[player.X, player.Y - 1].Type != TileType.Wall)
                         {
                             player.Move(0, -1);
                         }
                         break;
                     case 's':
-                        if (player.Y < ySize-1 && map[player.X + 1, player.Y].Type != TileType.Wall)
+                        if (player.X < ySize-1 && map[player.X + 1, player.Y].Type != TileType.Wall)
                         {
                             player.Move(1, 0);
                         }
                         break;
                     case 'd':
-                        if (player.X < xSize-1 && map[player.X, player.Y + 1].Type != TileType.Wall)
+                        if (player.Y < xSize-1 && map[player.X, player.Y + 1].Type != TileType.Wall)
                         {
                             player.Move(0, 1);
                         }
