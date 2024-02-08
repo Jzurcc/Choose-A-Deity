@@ -1,4 +1,5 @@
-﻿using static System.Threading.Thread;
+﻿using System.Linq.Expressions;
+using static System.Threading.Thread;
 
 public class Program {
     public enum TileType { Empty, Wall, Portal }
@@ -15,8 +16,9 @@ public class Program {
     public static Tile[,] room = new Tile[0, 0];
     public static RoomGenerator roomGen = new();    public static List<Enemy> enemies = [];
     public static string Menu = "";
-    // Player global variables
+    // UI variables
     public static string menuString = "";
+    public static bool willDisplay = false;
     public static Dictionary<int, string> statsStr = [];
 
     
@@ -114,11 +116,11 @@ public class Player {
     }
 
     public void Think(string str) {
-        Program.Print(String.Format("({0})", str), tspeed, tduration, ConsoleColor.DarkGray);
+        Program.Print(string.Format("({0})", str), tspeed, tduration, ConsoleColor.DarkGray);
     }
 
     public void Narrate(string str) {
-        Program.Print(String.Format("[{0}]", str), tspeed, tduration, ConsoleColor.White);
+        Program.Print(string.Format("[{0}]", str), tspeed, tduration, ConsoleColor.White);
     }
 
     public void Move(int dx, int dy) {
@@ -133,20 +135,26 @@ public class Player {
     public string DisplayInventory() {
         string InventoryStr = $"";
         for (var i = 0; i < inventory.Count; i++)
-            InventoryStr += String.Format("{0, -10}. {1, -10}", i+1, inventory[i]);
+            InventoryStr += string.Format("   {0}. {1, 10}", i+1, inventory[i]);
         return InventoryStr;
     }
 
     public Dictionary<int, string> DisplayStats() {
         Dictionary<int, string> StatsList = [];
         List<dynamic> Stats = [LVL, GLD, EXP, maxEXP, Health, maxHealth, Armor, DeityName, HP, ATK, DEF, INT, SPD, LCK, ""];
-        for (var i = 0; i <= (Stats.Count-1)/2; i++)
-            StatsList.Add(9+i, String.Format("{0, -10} {0, -10}", Stats[i], Stats[i+1]));
+        StatsList.Add(10, string.Format("   Level: {0, -13} Gold: {1}", LVL, GLD));
+        StatsList.Add(11, string.Format("   Health: {0}/{1, -8} EXP: {2}/{3}", Health, maxHealth, EXP, maxEXP));
+        StatsList.Add(12, string.Format("   Armor: {0, -13} Deity: {1}", Armor, DeityName));
+        StatsList.Add(13, string.Format("   --------------------------------------------"));
+        StatsList.Add(14, string.Format("   HP: {0, -16} DEF: {1}", HP, DEF));
+        StatsList.Add(15, string.Format("   ATK: {0, -15} INT: {1}", ATK, INT));
+        StatsList.Add(16, string.Format("   SPD: {0, -15} LCK: {1}", SPD, LCK));
+        
         return StatsList;
     }
     public void SetDeity(string deity) {
         if (deity != "None")
-            this.DeityName = "The" + deity.ToString();
+            this.DeityName = deity;
     }
 
     public void updateStats(bool updateHealth = false) {
@@ -366,7 +374,11 @@ public class RoomGenerator {
     public void PrintInterface(int i, int j) {
         Dictionary<int, string> Interface = new(){{2, $"   Health: {player.Health}/{player.maxHealth}"}, {3, $"   EXP: {player.EXP}/{player.maxEXP}"}, {4, $"   LVL: {player.LVL}"}, {5, $"   enemies: {enemies.Count}"}, {7, $"   Controls: Movement (WASD), DisplayInventory (I), DisplayStats (J), Quit (Q)"}, {9, "   " + menuString}};
         foreach (KeyValuePair<int, string> kvp in statsStr)
-            Interface.Add(kvp.Key, kvp.Value);
+            if (willDisplay)
+                Interface.Add(kvp.Key, kvp.Value);
+            else {
+                try {Interface.Remove(kvp.Key);} catch {}
+            }    
             
         foreach (KeyValuePair<int, string> kvp in Interface) {
             if (i == kvp.Key && j == ySize-1) Console.Write(kvp.Value);
@@ -378,7 +390,7 @@ public class RoomGenerator {
         char input = Console.ReadKey().KeyChar;
         Console.WriteLine();
         menuString = "";
-
+        willDisplay = false;
         switch (input) {
             case 'w':
                 player.Move(-1, 0);
@@ -397,6 +409,7 @@ public class RoomGenerator {
                 break;
             case 'j':
                 statsStr = player.DisplayStats();
+                willDisplay = true;
                 break;
             case 'q':
                 return false;
@@ -422,8 +435,6 @@ public class RoomGenerator {
     }
 }
 
-
-
 public static void DisplayTitle() {
     Console.ForegroundColor = ConsoleColor.DarkRed;
     Console.WriteLine(@"
@@ -445,7 +456,7 @@ public static int GetChoice(params string[] Choices) {
     Console.ForegroundColor = ConsoleColor.White;
     Console.WriteLine();
     for (int i = 0; i < Choices.Length; i++) {
-        Print(String.Format("[{0}] {1}", i+1, Choices[i].ToString()), 20, 100);
+        Print(string.Format("[{0}] {1}", i+1, Choices[i].ToString()), 20, 100);
     }
 
     Console.Write("> ");
