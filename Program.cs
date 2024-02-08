@@ -13,39 +13,33 @@ public class Tile {
 public class Program {
     // Global variables
     public static Player player = new(5, 5, ConsoleColor.White, "Player");
-    public static Enemy enemy = new(5, 5);
      public static Deity End = new(50, 1000, ConsoleColor.Black, "The End");
      public static Deity Wisened = new(30, 1000, ConsoleColor.DarkMagenta, "The Wisened");
      public static Deity Wanderer = new(5, 5, ConsoleColor.DarkRed, "The Wanderer"); // 42, 1300
      public static Deity Harvest = new(55, 1000, ConsoleColor.DarkGreen, "The Harvest");
      public static Tile[,] room = new Tile[xSize, ySize];
      public static Random rng = new();
-     public static int xSize = 27, ySize = 33;
+     public static int xSize = 21, ySize = 31;
      public static MapGenerator? mapGenerator;
      public static List<Enemy> enemies = [];
 
-public class Deity {
-    public int tspeed, tduration;
-    public ConsoleColor color;
-    public string name;
-    public Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
-        this.tspeed = tspeed;
-        this.tduration = tduration;
-        this.color = color;
-        this.name = name;
-    }
-    // Dialogue properties
+public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
+    public int tspeed = tspeed, tduration = tduration;
+    public ConsoleColor color = color;
+    public string name = name;
 
-    public void Talk(string str) {
+        // Dialogue properties
+
+        public void Talk(string str) {
         Program.Print(str, tspeed, tduration, color, name);
     }
 }
-public class Enemy {
-    public int X, Y;
+public class Enemy(int x, int y) {
+    public int X = x, Y = y;
+    public bool IsDefeated = false;
 
-    public Enemy(int x, int y) {
-        X = x;
-        Y = y;
+        public void Defeat() {
+        IsDefeated = true;
     }
 
     // Method to randomly move the enemy
@@ -129,10 +123,12 @@ public class Player {
             this.DeityName = "The" + deity.ToString();
     }
 
-    public void updateStats() {
+    public void updateStats(bool updateHealth = false) {
         this.maxEXP = 80 + LVL*20;
-        this.Health = 20 + HP*8;
+        this.maxHealth = 20 + HP*8;
         this.Armor = Math.Round(DEF*1.5);
+        if (updateHealth)
+            this.Health = maxHealth;
     }
     public class Deity {
             private string name;
@@ -184,7 +180,7 @@ public static void WandererRoute() {
     player.GLD -= 50;
     player.ATK -= 3;
     player.SPD -= 3;
-    player.updateStats();
+    player.updateStats(true);
     Sleep(1000);
     Console.Clear();
     mapGenerator = new MapGenerator(xSize, ySize);
@@ -238,7 +234,7 @@ public class MapGenerator {
             room[0, y] = new Tile(TileType.Wall);
             room[xSize - 1, y] = new Tile(TileType.Wall);
         }
-        GenerateRandomWalls((xSize-2)*(ySize-2)/6);
+        GenerateRandomWalls((xSize-2)*(ySize-2)/5);
 
         int midX = xSize / 2;
         int midY = ySize / 2;
@@ -247,7 +243,7 @@ public class MapGenerator {
             room[midX, midY + i] = new Tile(TileType.Empty); // Clear vertical middle
         }
 
-        InitializeEnemies(5);
+        InitializeEnemies(5+(xSize-2)*(ySize-2)/80);
     }
     public void InitializeEnemies(int maxEnemies) {
         while (enemies.Count < maxEnemies) {
@@ -287,11 +283,19 @@ public class MapGenerator {
         while (flag) {
             Console.Clear();
             PrintRoom();
-            if (player.X == enemy.X && player.Y == enemy.Y)
-                Encounter(player, enemy);
-            flag = ProcessInput();  
+            foreach (Enemy enemy in enemies) {
+                if (player.X == enemy.X && player.Y == enemy.Y) 
+                    Encounter(player, enemy);
+            }
+
+            flag = ProcessInput(); // Asks for input and returns false if input is q
             if (rng.Next(3) == 0) 
-                enemy.MoveRandom();  
+                foreach (Enemy enemy in enemies) {
+                    if (!enemy.IsDefeated) {
+                        enemy.MoveRandom();
+                    }
+                } 
+            Console.Clear();
         }
     }
     
@@ -303,10 +307,12 @@ public class MapGenerator {
             for (int j = 0; j < ySize; j++) {
                 if (player.X == i && player.Y == j)
                     WriteTile("Y ", ConsoleColor.White);
-                else if (enemy.X == i &&  enemy.Y == j) {
-                    WriteTile("? ", ConsoleColor.DarkRed);
-                }
-                else {
+                else if (enemies.Any(enemy => !enemy.IsDefeated && enemy.X == i && enemy.Y == j)) {
+                    foreach (Enemy enemy in enemies) {
+                        if (!enemy.IsDefeated && enemy.X == i && enemy.Y == j)
+                            WriteTile("? ", ConsoleColor.Red);
+                    }
+                } else { 
                     if (room[i, j].Type == TileType.Empty)
                         WriteTile(". ", ConsoleColor.Gray);
                     else
