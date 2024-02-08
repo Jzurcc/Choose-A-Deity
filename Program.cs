@@ -16,7 +16,7 @@ public class Program {
      public static Deity Harvest = new(55, 1000, ConsoleColor.DarkGreen, "The Harvest");
      public static Tile[,] room = new Tile[xSize, ySize];
      public static Random rng = new();
-     public static int  xSize = rng.Next(27, 47), ySize = rng.Next(21, 27);
+     public static int xSize = rng.Next(21, 27), ySize = rng.Next(27, 47);
      public static MapGenerator? mapGenerator;
      public static List<Enemy> enemies = [];
 
@@ -51,7 +51,7 @@ public class Enemy(int x, int y) {
             int newY = Y + dy[direction];
 
             // Check if the new position is within bounds and not a wall
-            if (newX >= 0 && newX < ySize && newY >= 0 && newY < xSize && room[newX, newY].Type != TileType.Wall)
+            if (newX >= 0 && newX < xSize && newY >= 0 && newY < ySize && room[newX, newY].Type != TileType.Wall)
             {
                 X = newX;
                 Y = newY;
@@ -109,7 +109,7 @@ public class Player {
     public int[] Move(int dx, int dy) {
         int newX = X + dx;
         int newY = Y + dy;
-        if (newX >= 0 && newX < ySize && newY >= 0 && newY < xSize && room[newX, newY].Type != TileType.Wall) {
+        if (newX >= 0 && newX < xSize && newY >= 0 && newY < ySize && room[newX, newY].Type != TileType.Wall) {
             X = newX;
             Y = newY;
             return [X, Y];
@@ -179,7 +179,7 @@ public static void WandererRoute() {
     player.updateStats(true);
     Sleep(500);
     Console.Clear();
-    mapGenerator = new MapGenerator(ySize, xSize);
+    mapGenerator = new MapGenerator(xSize, ySize);
     MapGenerator.InitializeRoom();
     mapGenerator.DisplayRoom();
 }
@@ -202,16 +202,16 @@ public static void Print(string str, int speed = 5, int duration = 5, ConsoleCol
 }
 
 public class MapGenerator {
-    public MapGenerator(int ySize, int xSize) {
-        room = new Tile[ySize, xSize];
+    public MapGenerator(int xSize, int ySize) {
+        room = new Tile[xSize, ySize];
             InitializeRoom();
     }
 
     public static void InitializeRoom() {
-        room = new Tile[ySize, xSize];
+        room = new Tile[xSize, ySize];
         // Set all tiles as empty tiles
-        for (int x = 0; x < ySize; x++) {
-            for (int y = 0; y < xSize; y++) {
+        for (int x = 0; x < xSize; x++) {
+            for (int y = 0; y < ySize; y++) {
                 room[x, y] = new Tile(TileType.Empty);
             }
         }
@@ -221,38 +221,38 @@ public class MapGenerator {
         // room[4, 4] = new Tile(TileType.Wall);
         
         // Set boundaries as walls
-        for (int x = 0; x < ySize; x++) {
+        for (int x = 0; x < xSize; x++) {
             room[x, 0] = new Tile(TileType.Wall);
-            room[x, xSize - 1] = new Tile(TileType.Wall);
+            room[x, ySize - 1] = new Tile(TileType.Wall);
         }
 
-        for (int y = 0; y < xSize; y++) {
+        for (int y = 0; y < ySize; y++) {
             room[0, y] = new Tile(TileType.Wall);
-            room[ySize - 1, y] = new Tile(TileType.Wall);
+            room[xSize - 1, y] = new Tile(TileType.Wall);
         }
 
-        GenerateRandomWalls((ySize-2)*(xSize-2)/6);
+        GenerateRandomWalls((xSize-2)*(ySize-2)/6);
 
-        int midX = ySize / 2;
-        int midY = xSize / 2;
+        int midX = xSize / 2;
+        int midY = ySize / 2;
         for (int i = -1; i <= 1; i++) {
             room[midX + i, midY] = new Tile(TileType.Empty); // Clear horizontal middle
             room[midX, midY + i] = new Tile(TileType.Empty); // Clear vertical middle
         }
 
-            InitializeEnemies(5+(ySize-2)*(xSize-2)/80);
+            InitializeEnemies(5+(xSize-2)*(ySize-2)/80);
     }
 
     private static bool IsCrossSection(int x, int y) {
-        int midX = ySize / 2;
-        int midY = xSize / 2;
+        int midX = xSize / 2;
+        int midY = ySize / 2;
         return (y == midX && Math.Abs(y - midY) <= 1) || (x == midY && Math.Abs(x - midX) <= 1);
     }
 
     public static void InitializeEnemies(int maxEnemies) {
         while (enemies.Count < maxEnemies) {
-            int x = rng.Next(ySize-2);
-            int y = rng.Next(xSize-2);
+            int x = rng.Next(xSize-2);
+            int y = rng.Next(ySize-2);
             if (room[x, y].Type != TileType.Wall) {
                 enemies.Add(new Enemy(x, y));
             }
@@ -260,10 +260,10 @@ public class MapGenerator {
     }
     private static void GenerateRandomWalls(int numOfWalls) {
         for (int i = 0; i < numOfWalls; i++) {
-            int x = rng.Next(1, ySize - 1);
-            int y = rng.Next(1, xSize - 1);
+            int x = rng.Next(1, xSize - 1);
+            int y = rng.Next(1, ySize - 1);
 
-            if ((x == ySize / 2 && y >= xSize / 2 - 1 && y <= xSize / 2 + 1) || (y == xSize / 2 && x >= ySize / 2 - 1 && x <= ySize / 2 + 1)) {
+            if ((x == xSize / 2 && y >= ySize / 2 - 1 && y <= ySize / 2 + 1) || (y == ySize / 2 && x >= xSize / 2 - 1 && x <= xSize / 2 + 1)) {
                 continue; 
             }
 
@@ -272,7 +272,7 @@ public class MapGenerator {
             if (rng.NextDouble() > 0.5) { // Randomly decide if we extend the wall horizontally or vertically
                 int length = rng.Next(1, 4);
                 for (int l = 0; l < length; l++) {
-                    int nx = x + l < ySize ? x + l : x; // Ensure within bounds
+                    int nx = x + l < xSize ? x + l : x; // Ensure within bounds
                     if (!IsCrossSection(nx, y)) 
                         room[nx, y] = new Tile(TileType.Wall);
                 }
@@ -280,7 +280,7 @@ public class MapGenerator {
             else {
                 int length = rng.Next(1, 4); 
                 for (int l = 0; l < length; l++) {
-                    int ny = y + l < xSize ? y + l : y; // Ensure within bounds
+                    int ny = y + l < ySize ? y + l : y; // Ensure within bounds
                     if (!IsCrossSection(x, ny))
                         room[x, ny] = new Tile(TileType.Wall);
                 }
@@ -313,8 +313,8 @@ public class MapGenerator {
         System.Environment.Exit(0);
     }
     public void PrintRoom() {
-        for (int i = 0; i < ySize; i++) {
-            for (int j = 0; j < xSize; j++) {
+        for (int i = 0; i < xSize; i++) {
+            for (int j = 0; j < ySize; j++) {
                 if (player.X == i && player.Y == j)
                         WriteTile("Y ", ConsoleColor.White);
                 else if (enemies.Any(enemy => !enemy.IsDefeated && enemy.X == i && enemy.Y == j)) {
@@ -340,10 +340,10 @@ public class MapGenerator {
     }
     public static void PrintInterface(int i, int j) {
         int[] rows = {2, 3, 4, 6};
-        string[] texts = [$"   Health: {player.Health}/{player.maxHealth}", $"   EXP: {player.EXP}/{player.maxEXP}", $"   LVL: {player.LVL}", $"   Controls: Movement (WASD), Menu (M), Quit (Q) x: {xy[0]} y: {xy[1]}"];
+        string[] texts = [$"   Health: {player.Health}/{player.maxHealth}", $"   EXP: {player.EXP}/{player.maxEXP}", $"   LVL: {player.LVL}", $"   Controls: Movement (WASD), Menu (M), Quit (Q) x: {xy[0]} y: {xy[1]} x1: {player.X} y1: {player.Y}"];
         foreach (int row in rows) {
             int index = Array.IndexOf(rows, row);
-            if (i == rows[index] && j == xSize-1) Console.Write(texts[index]);
+            if (i == rows[index] && j == ySize-1) Console.Write(texts[index]);
         }
     }
 
