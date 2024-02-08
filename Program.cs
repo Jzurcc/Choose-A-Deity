@@ -15,11 +15,8 @@ public class Program {
     // Room global variables
     public static Tile[,] room = new Tile[0, 0];
     public static RoomGenerator roomGen = new();    public static List<Enemy> enemies = [];
-    public static string Menu = "";
     // UI variables
-    public static string menuString = "";
-    public static bool willDisplay = false;
-    public static Dictionary<int, string> statsStr = [];
+    public static Dictionary<int, string> Interface = new(){{2, $"   Health: {player.Health}/{player.maxHealth}"}, {3, $"   EXP: {player.EXP}/{player.maxEXP}"}, {4, $"   LVL: {player.LVL}"}, {5, $"   enemies: {enemies.Count}"}, {7, $"   Controls: Movement (WASD), GetInventory (I), GetStats (J), Quit (Q)"}};
 
     
 // Optimized rng.Next()
@@ -132,25 +129,28 @@ public class Player {
         }
     }
 
-    public string DisplayInventory() {
-        string InventoryStr = $"";
-        for (var i = 0; i < inventory.Count; i++)
-            InventoryStr += string.Format("   {0}. {1, 10}", i+1, inventory[i]);
-        return InventoryStr;
+    public Dictionary<int, string> GetInventory() {
+        Dictionary<int, string> inventoryDict = [];
+        for (var i = 0; i < 10; i++)
+            if (i < inventoryDict.Count)
+                inventoryDict.Add(10+i, string.Format("   {0}. {1}", i+1, inventory[i]));    
+            else
+                inventoryDict.Add(10+i, "Empty");
+
+        return inventoryDict;
     }
 
-    public Dictionary<int, string> DisplayStats() {
-        Dictionary<int, string> StatsList = [];
-        List<dynamic> Stats = [LVL, GLD, EXP, maxEXP, Health, maxHealth, Armor, DeityName, HP, ATK, DEF, INT, SPD, LCK, ""];
-        StatsList.Add(10, string.Format("   Level: {0, -13} Gold: {1}", LVL, GLD));
-        StatsList.Add(11, string.Format("   Health: {0}/{1, -8} EXP: {2}/{3}", Health, maxHealth, EXP, maxEXP));
-        StatsList.Add(12, string.Format("   Armor: {0, -13} Deity: {1}", Armor, DeityName));
-        StatsList.Add(13, string.Format("   --------------------------------------------"));
-        StatsList.Add(14, string.Format("   HP: {0, -16} DEF: {1}", HP, DEF));
-        StatsList.Add(15, string.Format("   ATK: {0, -15} INT: {1}", ATK, INT));
-        StatsList.Add(16, string.Format("   SPD: {0, -15} LCK: {1}", SPD, LCK));
+    public Dictionary<int, string> GetStats() {
+        Dictionary<int, string> StatsDict = [];
+        StatsDict.Add(10, string.Format("   Level: {0, -13} Gold: {1}", LVL, GLD));
+        StatsDict.Add(11, string.Format("   Health: {0}/{1, -8} EXP: {2}/{3}", Health, maxHealth, EXP, maxEXP));
+        StatsDict.Add(12, string.Format("   Armor: {0, -13} Deity: {1}", Armor, DeityName));
+        StatsDict.Add(13, string.Format("   --------------------------------------------"));
+        StatsDict.Add(14, string.Format("   HP: {0, -16} DEF: {1}", HP, DEF));
+        StatsDict.Add(15, string.Format("   ATK: {0, -15} INT: {1}", ATK, INT));
+        StatsDict.Add(16, string.Format("   SPD: {0, -15} LCK: {1}", SPD, LCK));
         
-        return StatsList;
+        return StatsDict;
     }
     public void SetDeity(string deity) {
         if (deity != "None")
@@ -361,7 +361,9 @@ public class RoomGenerator {
                 else if (room[i, j].Type == TileType.Portal)
                     WriteTile("O ", ConsoleColor.DarkBlue);
 
-                PrintInterface(i, j);
+                // Prints interface
+                foreach (KeyValuePair<int, string> kvp in Interface)
+                    if (i == kvp.Key && j == ySize-1) Console.Write(kvp.Value);
             }
             Console.WriteLine();
         }
@@ -371,26 +373,13 @@ public class RoomGenerator {
         Console.Write(str);
         Console.ForegroundColor = ConsoleColor.White;
     }
-    public void PrintInterface(int i, int j) {
-        Dictionary<int, string> Interface = new(){{2, $"   Health: {player.Health}/{player.maxHealth}"}, {3, $"   EXP: {player.EXP}/{player.maxEXP}"}, {4, $"   LVL: {player.LVL}"}, {5, $"   enemies: {enemies.Count}"}, {7, $"   Controls: Movement (WASD), DisplayInventory (I), DisplayStats (J), Quit (Q)"}, {9, "   " + menuString}};
-        foreach (KeyValuePair<int, string> kvp in statsStr)
-            if (willDisplay)
-                Interface.Add(kvp.Key, kvp.Value);
-            else {
-                try {Interface.Remove(kvp.Key);} catch {}
-            }    
-            
-        foreach (KeyValuePair<int, string> kvp in Interface) {
-            if (i == kvp.Key && j == ySize-1) Console.Write(kvp.Value);
-        }
-    }
-
      public static bool ProcessInput() {
         Console.Write("> ");
-        char input = Console.ReadKey().KeyChar;
+        char input = char.ToLower(Console.ReadKey().KeyChar);
         Console.WriteLine();
-        menuString = "";
-        willDisplay = false;
+        for (var i = 10; i <= 16; i++)
+            try {Interface.Remove(i);} catch {}
+
         switch (input) {
             case 'w':
                 player.Move(-1, 0);
@@ -405,11 +394,10 @@ public class RoomGenerator {
                 player.Move(0, 1);
                 break;
             case 'i':
-                menuString = player.DisplayInventory();
+                UpdateInterface(player.GetInventory());
                 break;
             case 'j':
-                statsStr = player.DisplayStats();
-                willDisplay = true;
+                UpdateInterface(player.GetStats());
                 break;
             case 'q':
                 return false;
@@ -433,6 +421,10 @@ public class RoomGenerator {
         // }
         return true;
     }
+}
+public static void UpdateInterface(Dictionary<int, string> Dict) {
+    foreach (KeyValuePair<int, string> kvp in Dict)
+        Interface.Add(kvp.Key, kvp.Value);
 }
 
 public static void DisplayTitle() {
