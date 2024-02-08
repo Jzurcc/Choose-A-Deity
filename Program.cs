@@ -1,14 +1,11 @@
-﻿using System.Diagnostics;
-using System.Media;
-using System.Reflection.Metadata;
-using static System.Threading.Thread;
+﻿using static System.Threading.Thread;
+
 public class Program {
     public enum TileType { Empty, Wall }
     public class Tile(TileType type) {
         public TileType Type { get; set; } = type;
     }
     // Global variables
-    public static int[] xy = [69, 69];
     public static Player player = new(5, 5, ConsoleColor.White, "Player");
      public static Deity End = new(50, 1000, ConsoleColor.Black, "The End");
      public static Deity Wisened = new(30, 1000, ConsoleColor.DarkMagenta, "The Wisened");
@@ -17,7 +14,7 @@ public class Program {
      public static Tile[,] room = new Tile[xSize, ySize];
      public static Random rng = new();
      public static int xSize = rng.Next(21, 27), ySize = rng.Next(27, 47);
-     public static MapGenerator? mapGenerator;
+     public static RoomGenerator? roomGenerator;
      public static List<Enemy> enemies = [];
 
 public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
@@ -70,8 +67,8 @@ public class Player {
     public Deity deity;
     public Player(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
         // Dialogue variables
-        this.X = 1;
-        this.Y = 7;
+        this.X = 15;
+        this.Y = 1;
         this.tspeed = tspeed;
         this.tduration = tduration;
         this.color = color;
@@ -106,18 +103,16 @@ public class Player {
         Program.Print(String.Format("[{0}]", str), tspeed, tduration, ConsoleColor.White);
     }
 
-    public int[] Move(int dx, int dy) {
+    public void Move(int dx, int dy) {
         int newX = X + dx;
         int newY = Y + dy;
         if (newX >= 0 && newX < xSize && newY >= 0 && newY < ySize && room[newX, newY].Type != TileType.Wall) {
             X = newX;
             Y = newY;
-            return [X, Y];
         }
-        return [69,69];
     }
 
-    public void setDeity(string deity) {
+    public void SetDeity(string deity) {
         if (deity != "None")
             this.DeityName = "The" + deity.ToString();
     }
@@ -138,7 +133,7 @@ public class Player {
 public static bool ChooseDeity(string chosen) {
     int choice = GetChoice("Enter the door.", "Go back.");
     if (choice == 1) {
-        player.setDeity(chosen);
+        player.SetDeity(chosen);
         return false;
     } else
         return true;
@@ -168,9 +163,9 @@ public static void WandererRoute() {
     // Wanderer.Talk("MY BLOOD SHALL FEED YOUR HUNGER FOR GLORY AND DOMINATION!");
     // Wanderer.Talk("DRINK MY BURNING BLOOD, SHALL YOU WISH TO DEFY DEATH HERSELF!");
     // Console.WriteLine();
-    player.Narrate("You chose The Wanderer as your Deity.");
-    player.Narrate("Experience the worst to become the best.");
-    player.Narrate("Effects: ++ HP, + DEF, - GLD, - ATK, - SPD");
+    // player.Narrate("You chose The Wanderer as your Deity.");
+    // player.Narrate("Experience the worst to become the best.");
+    // player.Narrate("Effects: ++ HP, + DEF, - GLD, - ATK, - SPD");
     player.HP += 5;
     player.DEF += 3;
     player.GLD -= 50;
@@ -179,9 +174,9 @@ public static void WandererRoute() {
     player.updateStats(true);
     Sleep(500);
     Console.Clear();
-    mapGenerator = new MapGenerator(xSize, ySize);
-    MapGenerator.InitializeRoom();
-    mapGenerator.DisplayRoom();
+    roomGenerator = new RoomGenerator();
+    RoomGenerator.InitializeRoom();
+    roomGenerator.DisplayRoom();
 }
 
 
@@ -201,13 +196,8 @@ public static void Print(string str, int speed = 5, int duration = 5, ConsoleCol
     Console.ForegroundColor = ConsoleColor.White;
 }
 
-public class MapGenerator {
-    public MapGenerator(int xSize, int ySize) {
-        room = new Tile[xSize, ySize];
-            InitializeRoom();
-    }
-
-    public static void InitializeRoom() {
+public class RoomGenerator() {
+        public static void InitializeRoom() {
         room = new Tile[xSize, ySize];
         // Set all tiles as empty tiles
         for (int x = 0; x < xSize; x++) {
@@ -240,7 +230,7 @@ public class MapGenerator {
             room[midX, midY + i] = new Tile(TileType.Empty); // Clear vertical middle
         }
 
-            InitializeEnemies(5+(xSize-2)*(ySize-2)/80);
+        InitializeEnemies(5+(xSize-2)*(ySize-2)/80);
     }
 
     private static bool IsCrossSection(int x, int y) {
@@ -340,7 +330,7 @@ public class MapGenerator {
     }
     public static void PrintInterface(int i, int j) {
         int[] rows = {2, 3, 4, 6};
-        string[] texts = [$"   Health: {player.Health}/{player.maxHealth}", $"   EXP: {player.EXP}/{player.maxEXP}", $"   LVL: {player.LVL}", $"   Controls: Movement (WASD), Menu (M), Quit (Q) x: {xy[0]} y: {xy[1]} x1: {player.X} y1: {player.Y}"];
+        string[] texts = [$"   Health: {player.Health}/{player.maxHealth}", $"   EXP: {player.EXP}/{player.maxEXP}", $"   LVL: {player.LVL}", $"   Controls: Movement (WASD), Menu (M), Quit (Q) midx: {xSize/2} midy: {ySize/2} row: {player.X} column: {player.Y}"];
         foreach (int row in rows) {
             int index = Array.IndexOf(rows, row);
             if (i == rows[index] && j == ySize-1) Console.Write(texts[index]);
@@ -354,16 +344,16 @@ public class MapGenerator {
         
         switch (input) {
             case 'w':
-                player.Move(0, -1);
-                break;
-            case 'a':
                 player.Move(-1, 0);
                 break;
+            case 'a':
+                player.Move(0, -1);
+                break;
             case 's':
-                player.Move(0, 1);
+                player.Move(1, 0);
                 break;
             case 'd':
-                player.Move(1, 0);
+                player.Move(0, 1);
                 break;
             case 'q':
                 return false;
@@ -446,7 +436,7 @@ public static int GetChoice(params string[] Choices) {
     //         // player.Think("The plaque below the statue reads... \"protection for a price.\"");
         // ChooseDeity("THE WANDERER"); // Turns false when the player enters the door.
     //         if (!flag)
-        player.setDeity("THE WANDERER");
+        player.SetDeity("THE WANDERER");
         WandererRoute();
     //     } else if (choice == 2) {
     //         player.Narrate("The door stood tall and magical, adorned with twin masks, one serene and the other solemn, their intricate designs pulsating with an otherworldly glow, while delicate tendrils of shimmering mist curled around the edges, obscuring the threshold in a veil of enchantment, hinting at the mysteries that lie beyond.");
