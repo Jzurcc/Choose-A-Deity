@@ -1,21 +1,22 @@
 ﻿using static System.Threading.Thread;
 
 public class Program {
-    public enum TileType { Empty, Wall }
+    public enum TileType { Empty, Wall, Portal }
     public class Tile(TileType type) {
         public TileType Type { get; set; } = type;
     }
     // Global variables
     public static Player player = new(5, 5, ConsoleColor.White, "Player");
-     public static Deity End = new(50, 1000, ConsoleColor.Black, "The End");
-     public static Deity Wisened = new(30, 1000, ConsoleColor.DarkMagenta, "The Wisened");
-     public static Deity Wanderer = new(5, 5, ConsoleColor.DarkRed, "The Wanderer"); // 42, 1300
-     public static Deity Harvest = new(55, 1000, ConsoleColor.DarkGreen, "The Harvest");
-     public static Tile[,] room = new Tile[xSize, ySize];
-     public static Random rng = new();
-     public static int xSize = rng.Next(21, 27), ySize = rng.Next(27, 47);
-     public static RoomGenerator? roomGenerator;
-     public static List<Enemy> enemies = [];
+    public static Deity End = new(50, 1000, ConsoleColor.Black, "The End");
+    public static Deity Wisened = new(30, 1000, ConsoleColor.DarkMagenta, "The Wisened");
+    public static Deity Wanderer = new(5, 5, ConsoleColor.DarkRed, "The Wanderer"); // 42, 1300
+    public static Deity Harvest = new(55, 1000, ConsoleColor.DarkGreen, "The Harvest");
+    public static Tile[,] room = new Tile[xSize, ySize];
+    public static Random rng = new();
+    public static int xSize = rng.Next(21, 27), ySize = rng.Next(27, 47);
+    public static RoomGenerator? roomGenerator;
+    public static List<Enemy> enemies = [];
+    public static int randomX = rng.Next(1, xSize-1), randomY = rng.Next(1, ySize-1);
 
 public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
     public int tspeed = tspeed, tduration = tduration;
@@ -62,13 +63,13 @@ public class Player {
     public int tspeed, tduration;
     public ConsoleColor color;
     public string name, DeityName;
-    public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, maxEXP, LVL, X, Y;
+    public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, maxEXP, LVL, EnemiesDefeated, X, Y, spawnX = 1, spawnY = 20;
     public double Health, maxHealth, Damage, Armor;
     public Deity deity;
     public Player(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
         // Dialogue variables
-        this.X = 15;
-        this.Y = 1;
+        this.X = spawnX;
+        this.Y = spawnY;
         this.tspeed = tspeed;
         this.tduration = tduration;
         this.color = color;
@@ -217,8 +218,8 @@ public class RoomGenerator() {
             room[xSize - 1, y] = new Tile(TileType.Wall);
         }
 
-        GenerateRandomWalls((xSize-2)*(ySize-2)/6);
-        InitializeEnemies(5+(xSize-2)*(ySize-2)/80);
+        GenerateRandomWalls((xSize-2)*(ySize-2)/8);
+        InitializeEnemies(10+(xSize-2)*(ySize-2)/70);
     }
 
     public static void InitializeEnemies(int maxEnemies) {
@@ -235,9 +236,9 @@ public class RoomGenerator() {
             int x = rng.Next(1, xSize - 1);
             int y = rng.Next(1, ySize - 1);
 
-            if ((x == xSize / 2 && y >= ySize / 2 - 1 && y <= ySize / 2 + 1) || (y == ySize / 2 && x >= xSize / 2 - 1 && x <= xSize / 2 + 1)) {
-                continue; 
-            }
+            // if ((x == xSize / 2 && y >= ySize / 2 - 1 && y <= ySize / 2 + 1) || (y == ySize / 2 && x >= xSize / 2 - 1 && x <= xSize / 2 + 1)) {
+            //     continue; 
+            // }
 
             room[x, y] = new Tile(TileType.Wall);
 
@@ -263,42 +264,52 @@ public class RoomGenerator() {
         bool flag = true;
         while (flag) {
             Console.Clear();
+            foreach (Enemy enemy in enemies)
+                if (player.X == enemy.X && player.Y == enemy.Y) 
+                    Encounter(player, enemy);
             PrintRoom();
-            foreach (Enemy enemy in enemies) {
-                if (player.X == enemy.X && player.Y == enemy.Y)
-                        Encounter(player, enemy);
-            }
 
             flag = ProcessInput(); // Asks for input and returns false if input is q
             if (rng.Next(2) == 0) 
-                foreach (Enemy enemy in enemies) {
-                    if (!enemy.IsDefeated) {
+                foreach (Enemy enemy in enemies)
+                    if (!enemy.IsDefeated)
                         enemy.MoveRandom();
-                    }
-                } 
+
         }
     }
     
-    public static void Encounter(dynamic player, dynamic enemy) {
+    public static void Encounter(dynamic player, dynamic? enemy) {
         Console.Write("Battle!");
+        enemy = null;
+        player.EnemiesDefeated++;
+        if (player.EnemiesDefeated >= 5)
+        {
+            OpenPortal();
+        }
+
     }
+    public static void OpenPortal() {
+        room[player.spawnX, player.spawnY] = new Tile(TileType.Portal);
+    }
+
     public void PrintRoom() {
         for (int i = 0; i < xSize; i++) {
             for (int j = 0; j < ySize; j++) {
                 if (player.X == i && player.Y == j)
-                        WriteTile("Y ", ConsoleColor.White);
+                    WriteTile("Y ", ConsoleColor.White);
                 else if (enemies.Any(enemy => !enemy.IsDefeated && enemy.X == i && enemy.Y == j)) {
                     foreach (Enemy enemy in enemies) {
                         if (!enemy.IsDefeated && enemy.X == i && enemy.Y == j)
-                                WriteTile("? ", ConsoleColor.Red);
+                            WriteTile("? ", ConsoleColor.Red);
                     }
-                } else { 
-                    if (room[i, j].Type == TileType.Empty)
-                            WriteTile(". ", ConsoleColor.Gray);
-                    else
-                            WriteTile("# ", ConsoleColor.Black);
-                }
-                    PrintInterface(i, j);
+                } else if (room[i, j].Type == TileType.Empty)
+                    WriteTile(". ", ConsoleColor.Gray);
+                else if (room[i, j].Type == TileType.Wall)
+                    WriteTile("# ", ConsoleColor.Black);
+                else if (room[i, j].Type == TileType.Portal)
+                    WriteTile("O ", ConsoleColor.DarkBlue);
+
+                PrintInterface(i, j);
             }
             Console.WriteLine();
         }
