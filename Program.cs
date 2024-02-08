@@ -1,4 +1,5 @@
-﻿using System.Media;
+﻿using System.Diagnostics;
+using System.Media;
 using System.Reflection.Metadata;
 using static System.Threading.Thread;
 public class Program {
@@ -226,7 +227,8 @@ public class MapGenerator {
             room[0, y] = new Tile(TileType.Wall);
             room[xSize - 1, y] = new Tile(TileType.Wall);
         }
-            GenerateRandomWalls((xSize-2)*(ySize-2)/5);
+
+        GenerateRandomWalls((xSize-2)*(ySize-2)/6);
 
         int midX = xSize / 2;
         int midY = ySize / 2;
@@ -237,6 +239,13 @@ public class MapGenerator {
 
             InitializeEnemies(5+(xSize-2)*(ySize-2)/80);
     }
+
+    private static bool IsCrossSection(int x, int y) {
+        int midX = xSize / 2;
+        int midY = ySize / 2;
+        return (y == midX && Math.Abs(y - midY) <= 1) || (x == midY && Math.Abs(x - midX) <= 1);
+    }
+
     public static void InitializeEnemies(int maxEnemies) {
         while (enemies.Count < maxEnemies) {
             int x = rng.Next(xSize-2);
@@ -274,11 +283,6 @@ public class MapGenerator {
                 }
             }
         }
-    }
-    private static bool IsCrossSection(int x, int y) {
-        int midX = xSize / 2;
-        int midY = ySize / 2;
-        return (x == midX && Math.Abs(y - midY) <= 1) || (y == midY && Math.Abs(x - midX) <= 1);
     }
 
     // Main method for displaying rooms
@@ -333,8 +337,8 @@ public class MapGenerator {
         Console.ForegroundColor = ConsoleColor.White;
     }
     public static void PrintInterface(int i, int j) {
-        int[] rows = {2, 3, 4, 6};
-        string[] texts = {$"   Health: {player.Health}/{player.maxHealth}", $"   EXP: {player.EXP}/{player.maxEXP}", $"   LVL: {player.LVL}", $"   Controls: Movement (WASD), Menu (M), Quit (Q)"};
+        int[] rows = {2, 3, 4, 6, 7, 8};
+        string[] texts = {$"   Health: {player.Health}/{player.maxHealth}", $"   EXP: {player.EXP}/{player.maxEXP}", $"   LVL: {player.LVL}", $"   Controls: Movement (WASD), Menu (M), Quit (Q)", $"x: {xSize}", $"z: {ySize}"};
         foreach (int row in rows) {
             int index = Array.IndexOf(rows, row);
             if (i == rows[index] && j == ySize-1) Console.Write(texts[index]);
@@ -412,43 +416,44 @@ public static int GetChoice(params string[] Choices) {
     // player.Think("I flinched from the pain and noticed something in front of me.");
     // player.Think("What is this place..?");
     // player.Think("Four giant doors guarded by statues loom ominously before me.");
-    bool flag = true;
-    while (flag) {
-        // player.Talk("Where do I go?");
+    // bool flag = true;
+    // while (flag) {
+    //     // player.Talk("Where do I go?");
 
-        int choice = GetChoice("Blood-Horned Door", "Twin-Mask Door", "Thorn-Blooming Door", "Ankh-Ornated Door", "Simple Door");
-        player.Think("I approached the door.");
-        if (choice == 1) {
-            // player.Narrate("The door stood tall and imposing, adorned with twisted horns portruding from every corner, their tips stained crimson with the blood of the unfortunate, each curve and jagged edge instills a primal fear in those who dare approach.");
-            // player.Think("The plaque below the statue reads... \"protection for a price.\"");
-            flag = ChooseDeity("THE WANDERER"); // Turns false when the player enters the door.
-            if (!flag)
-                WandererRoute();
-        } else if (choice == 2) {
-            player.Narrate("The door stood tall and magical, adorned with twin masks, one serene and the other solemn, their intricate designs pulsating with an otherworldly glow, while delicate tendrils of shimmering mist curled around the edges, obscuring the threshold in a veil of enchantment, hinting at the mysteries that lie beyond.");
-            player.Think("The plaque below the statue reads... \"Seek forbidden knowledge.\"");
-            flag = ChooseDeity("The Wisened");
-            // if (!flag)
-            //     WisenedRoute();
-        } else if (choice == 3) {
-            player.Narrate("The door stood tall and weathered, adorned with gnarled vines that twisted and coiled around its frame, their thorns glistening with a malevolent gleam as if hungry for the touch of unwary hands, while a faint aroma of fresh earth and ripened fruit wafted from the intricate carvings depicting fields of golden grain and lush orchards thriving beneath the shadow of a towering treant, its branches outstretched in a gesture of both protection and expectation.");
-            player.Think("The plaque below the statue reads... \"A bounty for the patient.\"");
-            flag = ChooseDeity("The Harvest");
-            // if (!flag)
-            //     HarvestRoute();
-        } else if (choice == 4) {
-            player.Narrate("The door loomed ominously, its obsidian surface engulfed in swirling crimson tendrils, each etching of the ankh symbol, a silent promise of finality and inevitability, a gateway to the abyssal realm of shadows where every step may lead to the precipice of final embrace.");
-            player.Think("The plaque below the statue reads... \"Find solace in the inevitable.\"");
-            flag = ChooseDeity("The End");
-            // if (!flag)
-            //     EndRoute();
-        } else if (choice == 5) {
-            player.Narrate("Just a simple door.");
-            flag = ChooseDeity("None");
-            // if (!flag)
-            //     DeitylessRoute();
-        }
-    }
+    //     int choice = GetChoice("Blood-Horned Door", "Twin-Mask Door", "Thorn-Blooming Door", "Ankh-Ornated Door", "Simple Door");
+    //     player.Think("I approached the door.");
+    //     if (choice == 1) {
+    //         // player.Narrate("The door stood tall and imposing, adorned with twisted horns portruding from every corner, their tips stained crimson with the blood of the unfortunate, each curve and jagged edge instills a primal fear in those who dare approach.");
+    //         // player.Think("The plaque below the statue reads... \"protection for a price.\"");
+        // ChooseDeity("THE WANDERER"); // Turns false when the player enters the door.
+    //         if (!flag)
+        player.setDeity("THE WANDERER");
+        WandererRoute();
+    //     } else if (choice == 2) {
+    //         player.Narrate("The door stood tall and magical, adorned with twin masks, one serene and the other solemn, their intricate designs pulsating with an otherworldly glow, while delicate tendrils of shimmering mist curled around the edges, obscuring the threshold in a veil of enchantment, hinting at the mysteries that lie beyond.");
+    //         player.Think("The plaque below the statue reads... \"Seek forbidden knowledge.\"");
+    //         flag = ChooseDeity("The Wisened");
+    //         // if (!flag)
+    //         //     WisenedRoute();
+    //     } else if (choice == 3) {
+    //         player.Narrate("The door stood tall and weathered, adorned with gnarled vines that twisted and coiled around its frame, their thorns glistening with a malevolent gleam as if hungry for the touch of unwary hands, while a faint aroma of fresh earth and ripened fruit wafted from the intricate carvings depicting fields of golden grain and lush orchards thriving beneath the shadow of a towering treant, its branches outstretched in a gesture of both protection and expectation.");
+    //         player.Think("The plaque below the statue reads... \"A bounty for the patient.\"");
+    //         flag = ChooseDeity("The Harvest");
+    //         // if (!flag)
+    //         //     HarvestRoute();
+    //     } else if (choice == 4) {
+    //         player.Narrate("The door loomed ominously, its obsidian surface engulfed in swirling crimson tendrils, each etching of the ankh symbol, a silent promise of finality and inevitability, a gateway to the abyssal realm of shadows where every step may lead to the precipice of final embrace.");
+    //         player.Think("The plaque below the statue reads... \"Find solace in the inevitable.\"");
+    //         flag = ChooseDeity("The End");
+    //         // if (!flag)
+    //         //     EndRoute();
+    //     } else if (choice == 5) {
+    //         player.Narrate("Just a simple door.");
+    //         flag = ChooseDeity("None");
+    //         // if (!flag)
+    //         //     DeitylessRoute();
+    //     }
+    // }
 }
 }
 
