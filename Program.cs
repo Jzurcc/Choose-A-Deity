@@ -11,9 +11,14 @@ public class Program {
     public static Deity Wisened = new(30, 1000, ConsoleColor.DarkMagenta, "The Wisened");
     public static Deity Wanderer = new(5, 5, ConsoleColor.DarkRed, "The Wanderer"); // 42, 1300
     public static Deity Harvest = new(55, 1000, ConsoleColor.DarkGreen, "The Harvest");
-    // Room generator global variables
+    // Room global variables
     public static Tile[,] room = new Tile[0, 0];
     public static RoomGenerator roomGen = new();    public static List<Enemy> enemies = [];
+    public static string Menu = "";
+    // Player global variables
+    public static string menuString = "";
+    public static Dictionary<int, string> statsStr = [];
+
     
 // Optimized rng.Next()
 public static int NextInt(params int[] n) {
@@ -74,6 +79,7 @@ public class Player {
     public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, maxEXP, LVL, EnemiesDefeated, X, Y;
     public double Health, maxHealth, Damage, Armor;
     public Deity deity;
+    public List<dynamic> inventory = [];
     // Map variables
     public int spawnX = NextInt(1, 20), spawnY = NextInt(1, 26);
     public Player(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
@@ -124,6 +130,20 @@ public class Player {
         }
     }
 
+    public string DisplayInventory() {
+        string InventoryStr = $"";
+        for (var i = 0; i < inventory.Count; i++)
+            InventoryStr += String.Format("{0, -10}. {1, -10}", i+1, inventory[i]);
+        return InventoryStr;
+    }
+
+    public Dictionary<int, string> DisplayStats() {
+        Dictionary<int, string> StatsList = [];
+        List<dynamic> Stats = [LVL, GLD, EXP, maxEXP, Health, maxHealth, Armor, DeityName, HP, ATK, DEF, INT, SPD, LCK, ""];
+        for (var i = 0; i <= (Stats.Count-1)/2; i++)
+            StatsList.Add(9+i, String.Format("{0, -10} {0, -10}", Stats[i], Stats[i+1]));
+        return StatsList;
+    }
     public void SetDeity(string deity) {
         if (deity != "None")
             this.DeityName = "The" + deity.ToString();
@@ -136,8 +156,7 @@ public class Player {
         if (updateHealth)
             this.Health = maxHealth;
     }
-    public class Deity(string name)
-        {
+    public class Deity(string name) {
             private string name = name;
         }
     }
@@ -183,6 +202,7 @@ public static void WandererRoute() {
     player.GLD -= 50;
     player.ATK -= 3;
     player.SPD -= 3;
+    player.inventory.Add("Sacrificial Dagger");
     player.updateStats(true);
     Sleep(500);
     Console.Clear();
@@ -344,11 +364,12 @@ public class RoomGenerator {
         Console.ForegroundColor = ConsoleColor.White;
     }
     public void PrintInterface(int i, int j) {
-        int[] rows = {2, 3, 4, 5, 7};
-        string[] texts = [$"   Health: {player.Health}/{player.maxHealth}", $"   EXP: {player.EXP}/{player.maxEXP}", $"   LVL: {player.LVL}", $"   enemies: {enemies.Count}", $"   Controls: Movement (WASD), Menu (M), Quit (Q)"];
-        foreach (int row in rows) {
-            int index = Array.IndexOf(rows, row);
-            if (i == rows[index] && j == ySize-1) Console.Write(texts[index]);
+        Dictionary<int, string> Interface = new(){{2, $"   Health: {player.Health}/{player.maxHealth}"}, {3, $"   EXP: {player.EXP}/{player.maxEXP}"}, {4, $"   LVL: {player.LVL}"}, {5, $"   enemies: {enemies.Count}"}, {7, $"   Controls: Movement (WASD), DisplayInventory (I), DisplayStats (J), Quit (Q)"}, {9, "   " + menuString}};
+        foreach (KeyValuePair<int, string> kvp in statsStr)
+            Interface.Add(kvp.Key, kvp.Value);
+            
+        foreach (KeyValuePair<int, string> kvp in Interface) {
+            if (i == kvp.Key && j == ySize-1) Console.Write(kvp.Value);
         }
     }
 
@@ -356,7 +377,8 @@ public class RoomGenerator {
         Console.Write("> ");
         char input = Console.ReadKey().KeyChar;
         Console.WriteLine();
-        
+        menuString = "";
+
         switch (input) {
             case 'w':
                 player.Move(-1, 0);
@@ -369,6 +391,12 @@ public class RoomGenerator {
                 break;
             case 'd':
                 player.Move(0, 1);
+                break;
+            case 'i':
+                menuString = player.DisplayInventory();
+                break;
+            case 'j':
+                statsStr = player.DisplayStats();
                 break;
             case 'q':
                 return false;
