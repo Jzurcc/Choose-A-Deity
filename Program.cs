@@ -18,10 +18,11 @@ public class Program {
      public static Deity Wisened = new(30, 1000, ConsoleColor.DarkMagenta, "The Wisened");
      public static Deity Wanderer = new(5, 5, ConsoleColor.DarkRed, "The Wanderer"); // 42, 1300
      public static Deity Harvest = new(55, 1000, ConsoleColor.DarkGreen, "The Harvest");
-     public static Tile[,]? room;
+     public static Tile[,] room;
      public static Random rng = new();
-     public static int xSize = 13, ySize = 26;
-     private static MapGenerator mapGenerator;
+     public static int xSize = 27, ySize = 33;
+     public static MapGenerator? mapGenerator;
+     public static List<Enemy> enemies = [];
 
 public class Deity {
     public int tspeed, tduration;
@@ -184,8 +185,9 @@ public static void WandererRoute() {
     player.ATK -= 3;
     player.SPD -= 3;
     player.updateStats();
-    Sleep(2000);
+    Sleep(1000);
     Console.Clear();
+    mapGenerator = new MapGenerator(xSize, ySize);
     mapGenerator.InitializeRoom();
     mapGenerator.DisplayRoom();
 }
@@ -236,7 +238,24 @@ public class MapGenerator {
             room[0, y] = new Tile(TileType.Wall);
             room[xSize - 1, y] = new Tile(TileType.Wall);
         }
-        mapGenerator = new MapGenerator(xSize, ySize);
+        GenerateRandomWalls((xSize-2)*(ySize-2)/6);
+
+        int midX = xSize / 2;
+        int midY = ySize / 2;
+        for (int i = -1; i <= 1; i++) {
+            room[midX + i, midY] = new Tile(TileType.Empty); // Clear horizontal middle
+            room[midX, midY + i] = new Tile(TileType.Empty); // Clear vertical middle
+        }
+
+        InitializeEnemies(5);
+    }
+    public void InitializeEnemies(int maxEnemies) {
+        int currentEnemies = 0;
+        while (currentEnemies < maxEnemies) {
+            int x = rng.Next(xSize-2);
+            int y = rng.Next(ySize-2);
+            if (room[x, y].Type != TileType.Wall) enemies.Add(new Enemy(x, y));
+        }
     }
     private void GenerateRandomWalls(int numOfWalls) {
         for (int i = 0; i < numOfWalls; i++) {
@@ -260,6 +279,48 @@ public class MapGenerator {
             }
         }
     }
+
+    // Main method for displaying rooms
+    public void DisplayRoom() {
+        bool flag = true;
+        while (flag) {
+            Console.Clear();
+            PrintRoom();
+            if (player.X == enemy.X && player.Y == enemy.Y)
+                Encounter(player, enemy);
+            flag = ProcessInput();  
+            if (rng.Next(3) == 0) 
+                enemy.MoveRandom();  
+        }
+    }
+    
+    public void Encounter(dynamic player, dynamic enemy) {
+        System.Environment.Exit(0);
+    }
+    public void PrintRoom() {
+        for (int i = 0; i < xSize; i++) {
+            for (int j = 0; j < ySize; j++) {
+                if (player.X == i && player.Y == j)
+                    WriteTile("Y ", ConsoleColor.White);
+                else if (enemy.X == i &&  enemy.Y == j) {
+                    WriteTile("? ", ConsoleColor.DarkRed);
+                }
+                else {
+                    if (room[i, j].Type == TileType.Empty)
+                        WriteTile(". ", ConsoleColor.Gray);
+                    else
+                       WriteTile("# ", ConsoleColor.Black);
+                }
+                PrintInterface(i, j);
+            }
+            Console.WriteLine();
+        }
+    }
+    public void WriteTile(string str, ConsoleColor color) {
+        Console.ForegroundColor = color;
+        Console.Write(str);
+        Console.ForegroundColor = ConsoleColor.White;
+    }
     public void PrintInterface(int i, int j) {
         int[] rows = {2, 3, 4, 6};
         string[] texts = {$"   Health: {player.Health}/{player.maxHealth}", $"   EXP: {player.EXP}/{player.maxEXP}", $"   LVL: {player.LVL}", $"   Controls: Movement (WASD), Menu (M), Quit (Q)"};
@@ -269,42 +330,7 @@ public class MapGenerator {
         }
     }
 
-    public void DisplayRoom() {
-        bool flag = true;
-        while (flag) {
-            Console.Clear();
-            PrintRoom();
-            if (player.X == enemy.X && player.Y == enemy.Y)
-                Battle(player, enemy);
-            flag = ProcessInput();  
-            if (rng.Next(3) == 0) 
-                enemy.MoveRandom();  
-        }
-    }
-    public void PrintRoom() {
-        for (int i = 0; i < xSize; i++) {
-            for (int j = 0; j < ySize; j++) {
-                if (player.X == i && player.Y == j)
-                    Console.Write("Y ");
-                else if (enemy.X == i &&  enemy.Y == j)
-                    Console.Write("? ");
-                else {
-                    if (room[i, j].Type == TileType.Empty)
-                        Console.Write(". ");
-                    else
-                        Console.Write("# ");
-                }
-                PrintInterface(i, j);
-            }
-            Console.WriteLine();
-        }
-    }
-
-    public void Battle(dynamic player, dynamic enemy) {
-        System.Environment.Exit(0);
-    }
-
-    public bool ProcessInput() {
+     public bool ProcessInput() {
         Console.Write("> ");
         char input = Console.ReadKey().KeyChar;
         Console.WriteLine();
@@ -328,6 +354,7 @@ public class MapGenerator {
         return true;
     }
 }
+
 
 
 public static void DisplayTitle() {
