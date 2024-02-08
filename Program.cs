@@ -18,7 +18,7 @@ public class Program {
      public static Deity Wisened = new(30, 1000, ConsoleColor.DarkMagenta, "The Wisened");
      public static Deity Wanderer = new(5, 5, ConsoleColor.DarkRed, "The Wanderer"); // 42, 1300
      public static Deity Harvest = new(55, 1000, ConsoleColor.DarkGreen, "The Harvest");
-     public static Tile[,] room;
+     public static Tile[,] room = new Tile[xSize, ySize];
      public static Random rng = new();
      public static int xSize = 27, ySize = 33;
      public static MapGenerator? mapGenerator;
@@ -250,11 +250,12 @@ public class MapGenerator {
         InitializeEnemies(5);
     }
     public void InitializeEnemies(int maxEnemies) {
-        int currentEnemies = 0;
-        while (currentEnemies < maxEnemies) {
+        while (enemies.Count < maxEnemies) {
             int x = rng.Next(xSize-2);
             int y = rng.Next(ySize-2);
-            if (room[x, y].Type != TileType.Wall) enemies.Add(new Enemy(x, y));
+            if (room[x, y].Type != TileType.Wall) {
+                enemies.Add(new Enemy(x, y));
+            }
         }
     }
     private void GenerateRandomWalls(int numOfWalls) {
