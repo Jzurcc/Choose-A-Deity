@@ -234,7 +234,7 @@ public class RoomGenerator {
                 room[xSize - 1, y] = new Tile(TileType.Wall);
             }
             GenerateRandomWalls((xSize-2)*(ySize-2)/8);
-            InitializeEnemies(20);
+            InitializeEnemies(20+(xSize-2)*(ySize-2)/70);
             player.spawnX = NextInt(1, 20);
             player.spawnY = NextInt(1, 26);
             player.X = player.spawnX;
@@ -282,13 +282,12 @@ public class RoomGenerator {
         bool flag = true;
         while (flag) {
             Console.Clear();
+            for (int i = 0; i < enemies.Count; i++)
+            if (enemies[i].IsDefeated)
+                enemies.RemoveAt(i);
             foreach (Enemy enemy in enemies)
                 if (player.X == enemy.X && player.Y == enemy.Y) 
                     Encounter(player, enemy);
-            
-            for (int i = 0; i < enemies.Count; i++)
-                if (enemies[i].IsDefeated)
-                    enemies.RemoveAt(i);
              PrintRoom();
 
             flag = ProcessInput(); // Asks for input and returns false if input is q
@@ -300,6 +299,7 @@ public class RoomGenerator {
             if (room[player.X, player.Y].Type == TileType.Portal) {
                 xSize = NextInt(21, 27);
                 ySize = NextInt(27, 47);
+                enemies.Clear();
                 InitializeRoom();
                 DisplayRoom();
             }
@@ -321,9 +321,9 @@ public class RoomGenerator {
             for (int j = 0; j < ySize; j++) {
                 if (player.X == i && player.Y == j)
                     WriteTile("Y ", ConsoleColor.Cyan);
-                else if (enemies.Any(enemy => !enemy.IsDefeated && enemy.X == i && enemy.Y == j)) {
+                else if (enemies.Any(enemy => enemy.X == i && enemy.Y == j)) {
                     foreach (Enemy enemy in enemies) {
-                        if (!enemy.IsDefeated && enemy.X == i && enemy.Y == j)
+                        if (enemy.X == i && enemy.Y == j)
                             WriteTile("? ", ConsoleColor.Red);
                     }
                 } else if (room[i, j].Type == TileType.Empty)
@@ -345,7 +345,7 @@ public class RoomGenerator {
     }
     public void PrintInterface(int i, int j) {
         int[] rows = {2, 3, 4, 5, 7};
-        string[] texts = [$"   Health: {player.Health}/{player.maxHealth}", $"   EXP: {player.EXP}/{player.maxEXP}", $"   LVL: {player.LVL}", $"Room: ", $"   Controls: Movement (WASD), Menu (M), Quit (Q)"];
+        string[] texts = [$"   Health: {player.Health}/{player.maxHealth}", $"   EXP: {player.EXP}/{player.maxEXP}", $"   LVL: {player.LVL}", $"   enemies: {enemies.Count}", $"   Controls: Movement (WASD), Menu (M), Quit (Q)"];
         foreach (int row in rows) {
             int index = Array.IndexOf(rows, row);
             if (i == rows[index] && j == ySize-1) Console.Write(texts[index]);
