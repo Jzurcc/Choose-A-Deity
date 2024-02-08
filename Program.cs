@@ -197,7 +197,7 @@ public static void Print(string str, int speed = 5, int duration = 5, ConsoleCol
 }
 
 public class RoomGenerator() {
-        public static void InitializeRoom() {
+    public static void InitializeRoom() {
         room = new Tile[xSize, ySize];
         // Set all tiles as empty tiles
         for (int x = 0; x < xSize; x++) {
@@ -205,10 +205,6 @@ public class RoomGenerator() {
                 room[x, y] = new Tile(TileType.Empty);
             }
         }
-        // room[3, 3] = new Tile(TileType.Wall);
-        // room[3, 4] = new Tile(TileType.Wall);
-        // room[4, 3] = new Tile(TileType.Wall);
-        // room[4, 4] = new Tile(TileType.Wall);
         
         // Set boundaries as walls
         for (int x = 0; x < xSize; x++) {
@@ -222,21 +218,7 @@ public class RoomGenerator() {
         }
 
         GenerateRandomWalls((xSize-2)*(ySize-2)/6);
-
-        int midX = xSize / 2;
-        int midY = ySize / 2;
-        for (int i = -1; i <= 1; i++) {
-            room[midX + i, midY] = new Tile(TileType.Empty); // Clear horizontal middle
-            room[midX, midY + i] = new Tile(TileType.Empty); // Clear vertical middle
-        }
-
         InitializeEnemies(5+(xSize-2)*(ySize-2)/80);
-    }
-
-    private static bool IsCrossSection(int x, int y) {
-        int midX = xSize / 2;
-        int midY = ySize / 2;
-        return (y == midX && Math.Abs(y - midY) <= 1) || (x == midY && Math.Abs(x - midX) <= 1);
     }
 
     public static void InitializeEnemies(int maxEnemies) {
@@ -262,17 +244,15 @@ public class RoomGenerator() {
             if (rng.NextDouble() > 0.5) { // Randomly decide if we extend the wall horizontally or vertically
                 int length = rng.Next(1, 4);
                 for (int l = 0; l < length; l++) {
-                    int nx = x + l < xSize ? x + l : x; // Ensure within bounds
-                    if (!IsCrossSection(nx, y)) 
-                        room[nx, y] = new Tile(TileType.Wall);
+                    int nx = x + l < xSize ? x + l : x; // Ensure within bounds 
+                    room[nx, y] = new Tile(TileType.Wall);
                 }
             }
             else {
                 int length = rng.Next(1, 4); 
                 for (int l = 0; l < length; l++) {
                     int ny = y + l < ySize ? y + l : y; // Ensure within bounds
-                    if (!IsCrossSection(x, ny))
-                        room[x, ny] = new Tile(TileType.Wall);
+                    room[x, ny] = new Tile(TileType.Wall);
                 }
             }
         }
