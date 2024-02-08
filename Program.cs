@@ -18,9 +18,10 @@ public class Program {
      public static Deity Wisened = new(30, 1000, ConsoleColor.DarkMagenta, "The Wisened");
      public static Deity Wanderer = new(5, 5, ConsoleColor.DarkRed, "The Wanderer"); // 42, 1300
      public static Deity Harvest = new(55, 1000, ConsoleColor.DarkGreen, "The Harvest");
-     public static Tile[,]? map;
+     public static Tile[,]? room;
      public static Random rng = new();
      public static int xSize = 13, ySize = 26;
+     private static MapGenerator mapGenerator;
 
 public class Deity {
     public int tspeed, tduration;
@@ -58,7 +59,7 @@ public class Enemy {
             int newY = Y + dy[direction];
 
             // Check if the new position is within bounds and not a wall
-            if (newX >= 0 && newX < xSize && newY >= 0 && newY < ySize && map[newX, newY].Type != TileType.Wall)
+            if (newX >= 0 && newX < xSize && newY >= 0 && newY < ySize && room[newX, newY].Type != TileType.Wall)
             {
                 X = newX;
                 Y = newY;
@@ -113,10 +114,10 @@ public class Player {
         Program.Print(String.Format("[{0}]", str), tspeed, tduration, ConsoleColor.White);
     }
 
-    public void Move(int dx, int dy, Tile[,] map, int xSize, int ySize) {
+    public void Move(int dx, int dy) {
         int newX = X + dx;
         int newY = Y + dy;
-        if (newX >= 0 && newX < xSize && newY >= 0 && newY < ySize && map[newX, newY].Type != TileType.Wall) {
+        if (newX >= 0 && newX < xSize && newY >= 0 && newY < ySize && room[newX, newY].Type != TileType.Wall) {
             X = newX;
             Y = newY;
         }
@@ -185,76 +186,10 @@ public static void WandererRoute() {
     player.updateStats();
     Sleep(2000);
     Console.Clear();
-    StartRun();
-}
-public static void StartRun() {
-    map = new Tile[xSize, ySize];
-    for (int i = 0; i < xSize; i++) {
-        for (int j = 0; j < ySize; j++)
-        {
-            map[i, j] = new Tile(TileType.Empty);
-        }
-    }
-    
-    map[3, 3] = new Tile(TileType.Wall);
-    map[3, 4] = new Tile(TileType.Wall);
-    map[4, 3] = new Tile(TileType.Wall);
-    map[4, 4] = new Tile(TileType.Wall);
-
-    bool flag = true;
-    while (flag) {
-        Console.Clear();
-        PrintMap();
-        flag = ProcessInput();  
-        if (rng.Next(2) == 0) 
-                enemy.MoveRandom();  
-    }
+    mapGenerator.InitializeRoom();
+    mapGenerator.DisplayRoom();
 }
 
-public static bool ProcessInput() {
-    Console.WriteLine("Enter direction (WASD): ");
-    char input = Console.ReadKey().KeyChar;
-    Console.WriteLine();
-    
-    switch (input) {
-        case 'w':
-            player.Move(-1, 0, map, xSize, ySize);
-            break;
-        case 'a':
-            player.Move(0, -1, map, xSize, ySize);
-            break;
-        case 's':
-            player.Move(1, 0, map, xSize, ySize);
-            break;
-        case 'd':
-            player.Move(0, 1, map, xSize, ySize);
-            break;
-        case 'q':
-            return false;
-    }
-    return true;
-}
-
-public static void PrintMap() {
-    for (int i = 0; i < xSize; i++) {
-        for (int j = 0; j < ySize; j++) {
-            if (player.X == i && player.Y == j)
-                Console.Write("Y ");
-            else if (enemy.X == i &&  enemy.Y == j)
-                Console.Write("? ");
-            else {
-                if (map[i, j].Type == TileType.Empty) {
-                    Console.Write(". ");
-                }
-                else
-                {
-                    Console.Write("# ");
-                }
-            }
-        }
-        Console.WriteLine();
-    }
-}
 
 public static void Print(string str, int speed = 5, int duration = 5, ConsoleColor color = ConsoleColor.White, string name = "") {
     Console.ForegroundColor = color;
@@ -271,6 +206,129 @@ public static void Print(string str, int speed = 5, int duration = 5, ConsoleCol
     
     Console.ForegroundColor = ConsoleColor.White;
 }
+
+public class MapGenerator {
+    public MapGenerator(int xSize, int ySize) {
+        room = new Tile[xSize, ySize];
+        InitializeRoom();
+    }
+
+    public void InitializeRoom() {
+        room = new Tile[xSize, ySize];
+        // Set all tiles as empty tiles
+        for (int x = 0; x < xSize; x++) {
+            for (int y = 0; y < ySize; y++) {
+                room[x, y] = new Tile(TileType.Empty);
+            }
+        }
+        // room[3, 3] = new Tile(TileType.Wall);
+        // room[3, 4] = new Tile(TileType.Wall);
+        // room[4, 3] = new Tile(TileType.Wall);
+        // room[4, 4] = new Tile(TileType.Wall);
+        
+        // Set boundaries as walls
+        for (int x = 0; x < xSize; x++) {
+            room[x, 0] = new Tile(TileType.Wall);
+            room[x, ySize - 1] = new Tile(TileType.Wall);
+        }
+
+        for (int y = 0; y < ySize; y++) {
+            room[0, y] = new Tile(TileType.Wall);
+            room[xSize - 1, y] = new Tile(TileType.Wall);
+        }
+        mapGenerator = new MapGenerator(xSize, ySize);
+    }
+    private void GenerateRandomWalls(int numOfWalls) {
+        for (int i = 0; i < numOfWalls; i++) {
+            int x = rng.Next(1, xSize - 1);
+            int y = rng.Next(1, ySize - 1);
+            room[x, y] = new Tile(TileType.Wall);
+
+            if (rng.NextDouble() > 0.5) { // Randomly decide if we extend the wall horizontally or vertically
+                int length = rng.Next(1, 4);
+                for (int l = 0; l < length; l++) {
+                    int nx = x + l < xSize ? x + l : x; // Ensure within bounds
+                    room[nx, y] = new Tile(TileType.Wall);
+                }
+            }
+            else {
+                int length = rng.Next(1, 4); 
+                for (int l = 0; l < length; l++) {
+                    int ny = y + l < ySize ? y + l : y; // Ensure within bounds
+                    room[x, ny] = new Tile(TileType.Wall);
+                }
+            }
+        }
+    }
+    public void PrintInterface(int i, int j) {
+        int[] rows = {2, 3, 4, 6};
+        string[] texts = {$"   Health: {player.Health}/{player.maxHealth}", $"   EXP: {player.EXP}/{player.maxEXP}", $"   LVL: {player.LVL}", $"   Controls: Movement (WASD), Menu (M), Quit (Q)"};
+        foreach (int row in rows) {
+            int index = Array.IndexOf(rows, row);
+            if (i == rows[index] && j == ySize-1) Console.Write(texts[index]);
+        }
+    }
+
+    public void DisplayRoom() {
+        bool flag = true;
+        while (flag) {
+            Console.Clear();
+            PrintRoom();
+            if (player.X == enemy.X && player.Y == enemy.Y)
+                Battle(player, enemy);
+            flag = ProcessInput();  
+            if (rng.Next(3) == 0) 
+                enemy.MoveRandom();  
+        }
+    }
+    public void PrintRoom() {
+        for (int i = 0; i < xSize; i++) {
+            for (int j = 0; j < ySize; j++) {
+                if (player.X == i && player.Y == j)
+                    Console.Write("Y ");
+                else if (enemy.X == i &&  enemy.Y == j)
+                    Console.Write("? ");
+                else {
+                    if (room[i, j].Type == TileType.Empty)
+                        Console.Write(". ");
+                    else
+                        Console.Write("# ");
+                }
+                PrintInterface(i, j);
+            }
+            Console.WriteLine();
+        }
+    }
+
+    public void Battle(dynamic player, dynamic enemy) {
+        System.Environment.Exit(0);
+    }
+
+    public bool ProcessInput() {
+        Console.Write("> ");
+        char input = Console.ReadKey().KeyChar;
+        Console.WriteLine();
+        
+        switch (input) {
+            case 'w':
+                player.Move(-1, 0);
+                break;
+            case 'a':
+                player.Move(0, -1);
+                break;
+            case 's':
+                player.Move(1, 0);
+                break;
+            case 'd':
+                player.Move(0, 1);
+                break;
+            case 'q':
+                return false;
+        }
+        return true;
+    }
+}
+
 
 public static void DisplayTitle() {
     Console.ForegroundColor = ConsoleColor.DarkRed;
@@ -299,8 +357,7 @@ public static int GetChoice(params string[] Choices) {
     Console.Write("> ");
     bool ValidChoice = int.TryParse( Console.ReadKey().KeyChar + "", out int Choice);
 
-    if (!ValidChoice || Choice < 1 || Choice > maxChoices)
-    {
+    if (!ValidChoice || Choice < 1 || Choice > maxChoices) {
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine("\nInvalid Input. Please try again.");
         Sleep(800);
