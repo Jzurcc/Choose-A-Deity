@@ -310,7 +310,7 @@ public class MapGenerator {
     }
     
     public static void Encounter(dynamic player, dynamic enemy) {
-        System.Environment.Exit(0);
+        Console.Write("Battle!");
     }
     public void PrintRoom() {
         for (int i = 0; i < xSize; i++) {
@@ -354,16 +354,16 @@ public class MapGenerator {
         
         switch (input) {
             case 'w':
-                xy = player.Move(0, 1);
+                player.Move(0, -1);
                 break;
             case 'a':
-                xy = player.Move(-1, 0);
+                player.Move(-1, 0);
                 break;
             case 's':
-                xy = player.Move(0, -1);
+                player.Move(0, 1);
                 break;
             case 'd':
-                xy = player.Move(1, 0);
+                player.Move(1, 0);
                 break;
             case 'q':
                 return false;
