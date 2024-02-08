@@ -215,8 +215,6 @@ public class RoomGenerator {
         this.ySize = NextInt(33, 55);
     }
         public void InitializeRoom() {
-            player.spawnX = NextInt(1, 20);
-            player.spawnY = NextInt(1, 26);
             room = new Tile[xSize, ySize];
             // Set all tiles as empty tiles
             for (int x = 0; x < xSize; x++) {
@@ -235,9 +233,12 @@ public class RoomGenerator {
                 room[0, y] = new Tile(TileType.Wall);
                 room[xSize - 1, y] = new Tile(TileType.Wall);
             }
-
             GenerateRandomWalls((xSize-2)*(ySize-2)/8);
-            InitializeEnemies(20+(xSize-2)*(ySize-2)/70);
+            InitializeEnemies(20);
+            player.spawnX = NextInt(1, 20);
+            player.spawnY = NextInt(1, 26);
+            player.X = player.spawnX;
+            player.Y = player.spawnY;
     }
 
     public void InitializeEnemies(int maxEnemies) {
@@ -284,7 +285,11 @@ public class RoomGenerator {
             foreach (Enemy enemy in enemies)
                 if (player.X == enemy.X && player.Y == enemy.Y) 
                     Encounter(player, enemy);
-            PrintRoom();
+            
+            for (int i = 0; i < enemies.Count; i++)
+                if (enemies[i].IsDefeated)
+                    enemies.RemoveAt(i);
+             PrintRoom();
 
             flag = ProcessInput(); // Asks for input and returns false if input is q
             if (NextInt(2) == 0) 
