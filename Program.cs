@@ -15,6 +15,7 @@ public static Enigma ENIGMA = new(5, 5, ConsoleColor.DarkRed, "SACRIFICE"); // 4
 public static Harvest HARVEST = new(55, 1000, ConsoleColor.DarkGreen, "HARVEST");
 public static End END = new(50, 1000, ConsoleColor.Black, "END");
 public static Chaos CHAOS = new(60, 1000, ConsoleColor.DarkMagenta, "CHAOS");
+// Write the battle encounter system with interface that is similar to Undertale but in text-version. Whosever's SPD is higher, they will go first. The options are: Attack, Inventory, Flee. When the player selects attack, an interface of possible attacks/skills will show, and the same goes for inventory. There should be numbers corresponding to the option to get player input (i.e., [1] Attack, [2] Inventory, etc.). 
 // Room global variables
 public static Tile[,] Room = new Tile[0, 0];
 public static RoomGenerator RoomGen = new();    public static List<Enemy> enemies = [];
@@ -30,28 +31,47 @@ public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = Co
     }
 }
 public class Sacrifice(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
+    public class Follower(int x, int y) : Enemy(x, y) {
+        public static string[] Names = ["Bloodbound Fiend", "Shadowflame Exarch", "Painforged Emissary"];
+        public string Name = Names[NextInt(Names.Length)];
+    }
 }
 public class Enigma(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
+    public class Follower(int x, int y) : Enemy(x, y) {
+        public static string[] Names = ["Mind Walker", "Twilight Herald", "Dream Specter"];
+        public string Name = Names[NextInt(Names.Length)];
+    }
 }
 public class Harvest(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
+    public class Follower(int x, int y) : Enemy(x, y) {
+        public static string[] Names = ["Bleeding Orchardgeist", "Weeping Golem", "Fanged Treant"];
+        public string Name = Names[NextInt(Names.Length)];
+    }
 }
 public class End(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
-}
+    public class Follower(int x, int y) : Enemy(x, y) {
+            public static string[] Names = ["Voidborn Wraith", "Oblivion Scourge", "Ancient Desolator"];
+            public string Name = Names[NextInt(Names.Length)];
+        }
+    }
 public class Chaos(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
 }
 public class Deityless(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
 
 }
 public class Enemy(int x, int y) {
     public int X = x, Y = y, EXP = NextInt(17+(player.Stage*3), 25+(player.Stage*3));
+    public int HP, ATK, DEF, INT, SPD, LCK, GLD;
     public DeityEnum Deity = DeityList[NextInt(DeityList.Count)];
     public bool IsDefeated = false;
     public void Defeat() {
+        player.TotalKills++;
+        player.EXP += EXP;
+        if (player.EXP >= player.MaxEXP) {
+            player.EXP -= player.MaxEXP;
+            player.LVL++;
+            player.UpdateStats();
+        }
         IsDefeated = true;
     }
 
@@ -86,7 +106,7 @@ public class Player {
     public ConsoleColor color;
     // Attribute variables
     public string name, DeityName;
-    public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, MaxEXP, LVL, Kills, X, Y, Stage;
+    public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, MaxEXP, LVL, X, Y, Stage,  TotalKills, SacrificeKills, EnigmaKills, HarvestKills, EndKills;
     public double Health, MaxHealth, Damage, Armor;
     public dynamic ChosenDeity;
     public List<dynamic> inventory;
@@ -160,7 +180,7 @@ public class Player {
     public Dictionary<int, string> GetStats() {
         Dictionary<int, string> StatsDict = [];
         StatsDict.Add(1, "   --------------------------------------------");
-        List<string> strings = [string.Format("   Level: {0, -13} Gold: {1}", LVL, GLD), string.Format("   Health: {0}/{1, -8} EXP: {2}/{3}", Health, MaxHealth, EXP, MaxEXP), string.Format("   Armor: {0, -13} Deity: {1}", Armor, DeityName), "   --------------------------------------------", string.Format("   HP: {0, -16} DEF: {1}", HP, DEF), string.Format("   ATK: {0, -15} INT: {1}", ATK, INT), string.Format("   SPD: {0, -15} LCK: {1}", SPD, LCK), string.Format("   Kills: {0, -13} Room: {1}", Kills, Stage)];
+        List<string> strings = [string.Format("   Level: {0, -13} Gold: {1}", LVL, GLD), string.Format("   Health: {0}/{1, -8} EXP: {2}/{3}", Health, MaxHealth, EXP, MaxEXP), string.Format("   Armor: {0, -13} Deity: {1}", Armor, DeityName), "   --------------------------------------------", string.Format("   HP: {0, -16} DEF: {1}", HP, DEF), string.Format("   ATK: {0, -15} INT: {1}", ATK, INT), string.Format("   SPD: {0, -15} LCK: {1}", SPD, LCK), string.Format("   Kills: {0, -13} Room: {1}", TotalKills, SacrificeKills, EnigmaKills, HarvestKills, EndKills, Stage)];
 
         for (var i = 0; i < strings.Count; i++)
             StatsDict.Add(2+i, strings[i]);
@@ -292,6 +312,7 @@ public class RoomGenerator {
     }
 
     public void InitializeEnemies(int maxEnemies) {
+        DeityList.Remove(DeityEnum.None);
         while (enemies.Count < maxEnemies) {
             int x = NextInt(1, xSize-1);
             int y = NextInt(1, ySize-1);
@@ -356,8 +377,15 @@ public class RoomGenerator {
             
             // Checks if player's tile is a portal
             if (Room[player.X, player.Y].Type == TileType.Portal) {
-                xSize = NextInt(21, 27);
-                ySize = NextInt(27, 47);
+                Console.Clear();
+                player.Narrate("You entered the portal.");
+                for (var i = 0; i < 3; i++) {
+                    Console.Write(". ");
+                    Sleep(450);
+                }
+
+                xSize = NextInt(25, 35);
+                ySize = NextInt(25, 40);
                 player.Stage++;
                 enemies.Clear();
                 InitializeRoom();
@@ -368,26 +396,12 @@ public class RoomGenerator {
     }
     
     public static void Encounter(dynamic player, dynamic enemy) {
-        DeityList.Remove(DeityEnum.None);
         foreach (DeityEnum i in DeityList)
             Console.Write($" {i}");
-            
-
-        player.EXP += enemy.EXP;
-        player.Health -= 5;
-
-        if (player.EXP >= player.MaxEXP) {
-            player.EXP -= player.MaxEXP;
-            player.LVL++;
-            player.UpdateStats();
-        }
-
-        enemy.IsDefeated = true;
-        player.Kills++;
-
-        if (player.Kills % 5 == 0)
+    
+        enemy.Defeat();
+        if (player.TotalKills % 5 == 0)
             Room[player.spawnX, player.spawnY] = new Tile(TileType.Portal);
-
     }
 
 
