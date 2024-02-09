@@ -28,6 +28,24 @@ public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = Co
         Program.Print(str, tspeed, tduration, color, name);
     }
 }
+public class Wanderer(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
+
+}
+public class Wisened(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
+
+}
+public class Harvest(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
+
+}
+public class End(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
+
+}
+public class Chaos(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
+
+}
+public class Deityless(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
+
+}
 public class Enemy(int x, int y) {
     public int X = x, Y = y;
     public bool IsDefeated = false;
@@ -61,31 +79,15 @@ public class Enemy(int x, int y) {
     }
 }
 
-    public class Wanderer(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
-    }
-    public class Wisened(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
-    }
-    public class Harvest(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
-    }
-    public class End(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
-    }
-    public class Chaos(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
-    }
-
     public class Player {
     // Dialogue variables
     public int tspeed, tduration;
     public ConsoleColor color;
     // Attribute variables
     public string name, DeityName;
-    public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, maxEXP, LVL, EnemiesDefeated, X, Y;
-    public double Health, maxHealth, Damage, Armor;
-    public Deity deity;
+    public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, MaxEXP, LVL, EnemiesDefeated, X, Y, RoomNum;
+    public double Health, MaxHealth, Damage, Armor;
+    public dynamic ChosenDeity = new Deityless();
     public List<dynamic> inventory = [];
     // Map variables
     public int spawnX = NextInt(1, 20), spawnY = NextInt(1, 26);
@@ -109,12 +111,11 @@ public class Enemy(int x, int y) {
         // Stats variables
         this.GLD = 100;
         this.EXP = 0;
-        this.maxEXP = 80 + LVL*20;
+        this.MaxEXP = 80 + LVL*20;
         this.Health = 20 + HP*8;
-        this.maxHealth = Health;
+        this.MaxHealth = Health;
         this.Damage = ATK;
         this.Armor = Math.Round(DEF*1.5);
-        this.deity = new Deity(DeityName);
     // Methods
     }    public void Talk(string str) {
         Program.Print(str, tspeed, tduration, color, name);
@@ -151,31 +152,29 @@ public class Enemy(int x, int y) {
     public Dictionary<int, string> GetStats() {
         Dictionary<int, string> StatsDict = [];
         StatsDict.Add(10, string.Format("   Level: {0, -13} Gold: {1}", LVL, GLD));
-        StatsDict.Add(11, string.Format("   Health: {0}/{1, -8} EXP: {2}/{3}", Health, maxHealth, EXP, maxEXP));
+        StatsDict.Add(11, string.Format("   Health: {0}/{1, -8} EXP: {2}/{3}", Health, MaxHealth, EXP, MaxEXP));
         StatsDict.Add(12, string.Format("   Armor: {0, -13} Deity: {1}", Armor, DeityName));
         StatsDict.Add(13, string.Format("   --------------------------------------------"));
         StatsDict.Add(14, string.Format("   HP: {0, -16} DEF: {1}", HP, DEF));
         StatsDict.Add(15, string.Format("   ATK: {0, -15} INT: {1}", ATK, INT));
         StatsDict.Add(16, string.Format("   SPD: {0, -15} LCK: {1}", SPD, LCK));
+        StatsDict.Add(16, string.Format("   Enemies Defeated: {0, -15} Room: {1}", EnemiesDefeated, RoomNum));
         
         return StatsDict;
     }
-    public void SetDeity(string deity) {
-        if (deity != "None")
-            this.DeityName = deity;
+    public void SetDeity(string Deity) {
+        if (Deity != "None")
+            this.DeityName = Deity;
     }
 
     public void updateStats(bool updateHealth = false) {
-        this.maxEXP = 80 + LVL*20;
-        this.maxHealth = 20 + HP*8;
+        this.MaxEXP = 80 + LVL*20;
+        this.MaxHealth = 20 + HP*8;
         this.Armor = Math.Round(DEF*1.5);
         if (updateHealth)
-            this.Health = maxHealth;
+            this.Health = MaxHealth;
     }
-    public class Deity(string name) {
-            private string name = name;
-        }
-    }
+}
 
 public static bool ChooseDeity(string chosen) {
     int choice = GetChoice("Enter the door.", "Go back.");
@@ -251,7 +250,6 @@ public class RoomGenerator {
         this.ySize = NextInt(33, 55);
     }
         public void InitializeRoom() {
-            enemies.Clear();
             room = new Tile[xSize, ySize];
             // Set all tiles as empty tiles
             for (int x = 0; x < xSize; x++) {
@@ -344,6 +342,7 @@ public class RoomGenerator {
             if (room[player.X, player.Y].Type == TileType.Portal) {
                 xSize = NextInt(21, 27);
                 ySize = NextInt(27, 47);
+                enemies.Clear();
                 InitializeRoom();
                 DisplayRoom();
             }
@@ -378,7 +377,7 @@ public class RoomGenerator {
                     WriteTile("O ", ConsoleColor.Blue);
 
                 // Prints interface
-                Dictionary<int, string> BasicInterface = new(){{2, $"   Health: {player.Health}/{player.maxHealth}"}, {3, $"   EXP: {player.EXP}/{player.maxEXP}"}, {4, $"   LVL: {player.LVL}"}, {5, $"   enemies: {enemies.Count}"}, {7, $"   Controls: Movement (WASD), GetInventory (I), GetStats (J), Quit (Q)"}};
+                Dictionary<int, string> BasicInterface = new(){{2, $"   Health: {player.Health}/{player.MaxHealth}"}, {3, $"   EXP: {player.EXP}/{player.MaxEXP}"}, {4, $"   LVL: {player.LVL}"}, {5, $"   enemies: {enemies.Count}"}, {7, $"   Controls: Movement (WASD), Inventory (I), Stats (J), Quit (Q)"}};
                 UpdateInterface(BasicInterface);
 
                 foreach (KeyValuePair<int, string> kvp in Interface)
@@ -540,4 +539,3 @@ public static int NextInt(params int[] n) {
 } 
 
 }
-

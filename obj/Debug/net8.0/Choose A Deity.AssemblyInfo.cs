@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Choose A Deity")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4f18da810a66b8d8355632dcb07e1919e474f55f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e3433be64fca6c384fd3801f7215444966a3cc45")]
 [assembly: System.Reflection.AssemblyProductAttribute("Choose A Deity")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Choose A Deity")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
