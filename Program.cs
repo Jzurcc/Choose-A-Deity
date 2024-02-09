@@ -6,12 +6,14 @@ public enum TileType { Empty, Wall, Portal }
 public class Tile(TileType type) {
     public TileType Type { get; set; } = type;
 }
+public enum Deities { Wanderer, Wisened, Harvest, End }
+public static Array DeitiesArray = Enum.GetValues(typeof(Deities));
 // Deity Dialogue variables
 public static Player player = new(5, 5, ConsoleColor.White, "Player");
-public static End END = new(50, 1000, ConsoleColor.Black, "END");
 public static Wanderer WANDERER = new(30, 1000, ConsoleColor.DarkMagenta, "WISENED");
 public static Wisened WISENED = new(5, 5, ConsoleColor.DarkRed, "WANDERER"); // 42, 1300
 public static Harvest HARVEST = new(55, 1000, ConsoleColor.DarkGreen, "HARVEST");
+public static End END = new(50, 1000, ConsoleColor.Black, "END");
 public static Chaos CHAOS = new(60, 1000, ConsoleColor.DarkMagenta, "CHAOS");
 // Room global variables
 public static Tile[,] Room = new Tile[0, 0];
@@ -47,9 +49,9 @@ public class Deityless(int tspeed = 35, int tduration = 450, ConsoleColor color 
 }
 public class Enemy(int x, int y) {
     public int X = x, Y = y, EXP = NextInt(17+(player.Stage*3), 25+(player.Stage*3));
+    public Deities Deity = (Deities) DeitiesArray.GetValue(NextInt(DeitiesArray.Length));
     public bool IsDefeated = false;
-
-        public void Defeat() {
+    public void Defeat() {
         IsDefeated = true;
     }
 
@@ -203,13 +205,17 @@ public static void WandererRoute() {
     WANDERER.name = "THE WANDERER";
     // Wanderer.Talk("BLEED FOR YOUR MASTER, FOOL!");
     // player.Talk("...What are you?");
-    // Wanderer.Talk("I AM THE WANDERER, MASTER OF BLOOD AND BLADE, DEITY OF THE ENDLESS FRAY!");
+    // Wanderer.Talk("I AM THE WANDERER, MASTER OF BLOOD AND BLADE, Deities OF THE ENDLESS FRAY!");
     // Wanderer.Talk("MY BLOOD SHALL FEED YOUR HUNGER FOR GLORY AND DOMINATION!");
     // Wanderer.Talk("DRINK MY BURNING BLOOD, SHALL YOU WISH TO DEFY DEATH HERSELF!");
     // Console.WriteLine();
     // player.Narrate("You chose The Wanderer as your Deity.");
     // player.Narrate("Experience the worst to become the best.");
     // player.Narrate("Effects: ++ HP, + DEF, - GLD, - ATK, - SPD");
+    // Sleep(500);
+    // player.Narrate("You have angered the other deities.");
+    // player.Narrate("They are coming for your soul.");
+    // Sleep(1500);
     player.HP += 5;
     player.DEF += 3;
     player.GLD -= 50;
@@ -217,7 +223,6 @@ public static void WandererRoute() {
     player.SPD -= 3;
     player.inventory.Add("Sacrificial Dagger");
     player.UpdateStats(true);
-    Sleep(500);
     Console.Clear();
     RoomGen = new();
     RoomGen.InitializeRoom();
@@ -268,7 +273,7 @@ public class RoomGenerator {
                 Room[0, y] = new Tile(TileType.Wall);
                 Room[xSize - 1, y] = new Tile(TileType.Wall);
             }
-            GenerateRandomWalls((xSize-2)*(ySize-2)/8);
+            InitializeWalls((xSize-2)*(ySize-2)/5);
             InitializeEnemies(10+(xSize-2)*(ySize-2)/70);
             player.spawnX = NextInt(1, 20);
             player.spawnY = NextInt(1, 26);
@@ -284,7 +289,7 @@ public class RoomGenerator {
                 enemies.Add(new Enemy(x, y));
         }
     }
-    private void GenerateRandomWalls(int numOfWalls) {
+    private void InitializeWalls(int numOfWalls) {
         for (int i = 0; i < numOfWalls; i++) {
             int x = NextInt(1, xSize - 1);
             int y = NextInt(1, ySize - 1);
@@ -297,8 +302,8 @@ public class RoomGenerator {
 
             if (RNG.NextDouble() >= 0.5) {
                 int length = NextInt(1, 4);
-                for (int l = 0; l < length; l++) {
-                    int nx = x + l < xSize ? x + l : x; // Ensure within bounds 
+                for (int j = 0; j < length; j++) {
+                    int nx = x + j < xSize ? x + j : x; // Ensure within bounds 
                     Room[nx, y] = new Tile(TileType.Wall);
                 }
             }
@@ -382,7 +387,7 @@ public class RoomGenerator {
                 else if (enemies.Any(enemy => enemy.X == i && enemy.Y == j))
                     foreach (Enemy enemy in enemies) {
                         if (enemy.X == i && enemy.Y == j)
-                            WriteTile("! ", ConsoleColor.Red);
+                            WriteTile("! ", ConsoleColor.Black);
                     }
                 else if (Room[i, j].Type == TileType.Empty)
                     WriteTile(". ", ConsoleColor.Black);
