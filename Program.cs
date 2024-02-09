@@ -6,12 +6,12 @@ public enum TileType { Empty, Wall, Portal }
 public class Tile(TileType type) {
     public TileType Type { get; set; } = type;
 }
-public enum Deities { Wanderer, Wisened, Harvest, End }
-public static Array DeitiesArray = Enum.GetValues(typeof(Deities));
+public enum DeityEnum { Sacrifice, Enigma, Harvest, End, None }
+public static List<DeityEnum> DeityList = Enum.GetValues(typeof(DeityEnum)).Cast<DeityEnum>().ToList();
 // Deity Dialogue variables
 public static Player player = new(5, 5, ConsoleColor.White, "Player");
-public static Wanderer WANDERER = new(30, 1000, ConsoleColor.DarkMagenta, "WISENED");
-public static Wisened WISENED = new(5, 5, ConsoleColor.DarkRed, "WANDERER"); // 42, 1300
+public static Sacrifice SACRIFICE = new(30, 1000, ConsoleColor.DarkMagenta, "ENIGMA");
+public static Enigma ENIGMA = new(5, 5, ConsoleColor.DarkRed, "SACRIFICE"); // 42, 1300
 public static Harvest HARVEST = new(55, 1000, ConsoleColor.DarkGreen, "HARVEST");
 public static End END = new(50, 1000, ConsoleColor.Black, "END");
 public static Chaos CHAOS = new(60, 1000, ConsoleColor.DarkMagenta, "CHAOS");
@@ -29,10 +29,10 @@ public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = Co
         Program.Print(str, tspeed, tduration, color, name);
     }
 }
-public class Wanderer(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
+public class Sacrifice(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
 
 }
-public class Wisened(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
+public class Enigma(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
 
 }
 public class Harvest(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
@@ -49,7 +49,7 @@ public class Deityless(int tspeed = 35, int tduration = 450, ConsoleColor color 
 }
 public class Enemy(int x, int y) {
     public int X = x, Y = y, EXP = NextInt(17+(player.Stage*3), 25+(player.Stage*3));
-    public Deities Deity = (Deities) DeitiesArray.GetValue(NextInt(DeitiesArray.Length));
+    public DeityEnum Deity = DeityList[NextInt(DeityList.Count)];
     public bool IsDefeated = false;
     public void Defeat() {
         IsDefeated = true;
@@ -80,7 +80,7 @@ public class Enemy(int x, int y) {
     }
 }
 
-    public class Player {
+public class Player {
     // Dialogue variables
     public int tspeed, tduration;
     public ConsoleColor color;
@@ -88,10 +88,11 @@ public class Enemy(int x, int y) {
     public string name, DeityName;
     public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, MaxEXP, LVL, Kills, X, Y, Stage;
     public double Health, MaxHealth, Damage, Armor;
-    public dynamic ChosenDeity = new Deityless();
-    public List<dynamic> inventory = [];
+    public dynamic ChosenDeity;
+    public List<dynamic> inventory;
+    public DeityEnum Deity;
     // Map variables
-    public int spawnX = NextInt(-5, 1), spawnY = NextInt(-5, 1);
+    public int spawnX = NextInt(1, 20), spawnY = NextInt(1, 26);
     public Player(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
         // Dialogue variables
         this.X = spawnX;
@@ -99,9 +100,13 @@ public class Enemy(int x, int y) {
         this.tspeed = tspeed;
         this.tduration = tduration;
         this.color = color;
+        // Info variables
         this.name = name;
-        this.DeityName = "None";
         this.Stage = 1;
+        this.inventory = [];
+        this.DeityName = "None";
+        this.Deity = DeityEnum.None;
+        this.ChosenDeity = new Deityless();
         // Attribute variables
         this.HP = 10;
         this.ATK = 10;
@@ -162,9 +167,11 @@ public class Enemy(int x, int y) {
 
         return StatsDict;
     }
-    public void SetDeity(string Deity) {
-        if (Deity != "None")
-            this.DeityName = Deity;
+    public void SetDeity(DeityEnum Deity) {
+        if (Deity != DeityEnum.None) {
+            this.DeityName = "THE " + Deity.ToString().ToUpper();
+            DeityList.Remove(Deity);
+        }
     }
 
     public void UpdateStats(bool updateHealth = false) {
@@ -176,7 +183,7 @@ public class Enemy(int x, int y) {
     }
 }
 
-public static bool ChooseDeity(string chosen) {
+public static bool ChooseDeity(DeityEnum chosen) {
     int choice = GetChoice("Enter the door.", "Go back.");
     if (choice == 1) {
         player.SetDeity(chosen);
@@ -187,7 +194,7 @@ public static bool ChooseDeity(string chosen) {
 }
 
 public static void WandererRoute() {
-    // Wanderer.name = "???";
+    // Sacrifice.name = "???";
     // player.Think("The door slammed shut as soon as I entered.");
     // player.Think("I feel an ominous figure watching me.");
     // Sleep(300);
@@ -195,21 +202,21 @@ public static void WandererRoute() {
     // Sleep(300);
     // player.Think("It's getting closer...");
     // Sleep(300);
-    // Wanderer.Talk("BWAHA..!");
+    // Sacrifice.Talk("BWAHA..!");
     // Sleep(300);
-    // Wanderer.Talk("BWAHAHA!");
+    // Sacrifice.Talk("BWAHAHA!");
     // player.Think("...");
     // Sleep(400);
-    // Wanderer.Talk("BWAHAHAHAHAHA!");
+    // Sacrifice.Talk("BWAHAHAHAHAHA!");
     // player.Think("A monstrous horned-figure wearing devilish armor approached...");
-    WANDERER.name = "THE WANDERER";
-    // Wanderer.Talk("BLEED FOR YOUR MASTER, FOOL!");
+    SACRIFICE.name = "THE SACRIFICE";
+    // Sacrifice.Talk("BLEED FOR YOUR MASTER, FOOL!");
     // player.Talk("...What are you?");
-    // Wanderer.Talk("I AM THE WANDERER, MASTER OF BLOOD AND BLADE, Deities OF THE ENDLESS FRAY!");
-    // Wanderer.Talk("MY BLOOD SHALL FEED YOUR HUNGER FOR GLORY AND DOMINATION!");
-    // Wanderer.Talk("DRINK MY BURNING BLOOD, SHALL YOU WISH TO DEFY DEATH HERSELF!");
+    // Sacrifice.Talk("I AM THE SACRIFICE, MASTER OF BLOOD AND BLADE, DeityEnum OF THE ENDLESS FRAY!");
+    // Sacrifice.Talk("MY BLOOD SHALL FEED YOUR HUNGER FOR GLORY AND DOMINATION!");
+    // Sacrifice.Talk("DRINK MY BURNING BLOOD, SHALL YOU WISH TO DEFY DEATH HERSELF!");
     // Console.WriteLine();
-    // player.Narrate("You chose The Wanderer as your Deity.");
+    // player.Narrate("You chose The Sacrifice as your Deity.");
     // player.Narrate("Experience the worst to become the best.");
     // player.Narrate("Effects: ++ HP, + DEF, - GLD, - ATK, - SPD");
     // Sleep(500);
@@ -273,8 +280,11 @@ public class RoomGenerator {
                 Room[0, y] = new Tile(TileType.Wall);
                 Room[xSize - 1, y] = new Tile(TileType.Wall);
             }
+            
+            // Initializes enemies and walls that scale with inner room area
             InitializeWalls((xSize-2)*(ySize-2)/5);
-            InitializeEnemies(10+(xSize-2)*(ySize-2)/70);
+            InitializeEnemies(15+(xSize-2)*(ySize-2)/70); 
+            // Randomizes and teleports player to random spawnpoint.
             player.spawnX = NextInt(1, 20);
             player.spawnY = NextInt(1, 26);
             player.X = player.spawnX;
@@ -283,8 +293,8 @@ public class RoomGenerator {
 
     public void InitializeEnemies(int maxEnemies) {
         while (enemies.Count < maxEnemies) {
-            int x = NextInt(xSize-2);
-            int y = NextInt(ySize-2);
+            int x = NextInt(1, xSize-1);
+            int y = NextInt(1, ySize-1);
             if (Room[x, y].Type != TileType.Wall)
                 enemies.Add(new Enemy(x, y));
         }
@@ -358,7 +368,10 @@ public class RoomGenerator {
     }
     
     public static void Encounter(dynamic player, dynamic enemy) {
-        Console.Write("Battle!");
+        DeityList.Remove(DeityEnum.None);
+        foreach (DeityEnum i in DeityList)
+            Console.Write($" {i}");
+            
 
         player.EXP += enemy.EXP;
         player.Health -= 5;
@@ -386,8 +399,7 @@ public class RoomGenerator {
                     WriteTile("Y ", ConsoleColor.Cyan);
                 else if (enemies.Any(enemy => enemy.X == i && enemy.Y == j))
                     foreach (Enemy enemy in enemies) {
-                        if (enemy.X == i && enemy.Y == j)
-                            WriteTile("! ", ConsoleColor.Black);
+                        WriteEnemies(enemy, i, j);
                     }
                 else if (Room[i, j].Type == TileType.Empty)
                     WriteTile(". ", ConsoleColor.Black);
@@ -409,6 +421,17 @@ public class RoomGenerator {
             Console.WriteLine();
         }
 
+    }
+
+    public static void WriteEnemies(Enemy enemy, int i, int j) {
+        if (enemy.X == i && enemy.Y == j && enemy.Deity == DeityEnum.Sacrifice)
+            WriteTile("! ", ConsoleColor.Red);
+        else if (enemy.X == i && enemy.Y == j && enemy.Deity == DeityEnum.Enigma)
+            WriteTile("! ", ConsoleColor.DarkMagenta);
+        else if (enemy.X == i && enemy.Y == j && enemy.Deity == DeityEnum.Harvest)
+            WriteTile("! ", ConsoleColor.DarkGreen);
+        else if (enemy.X == i && enemy.Y == j && enemy.Deity == DeityEnum.End)
+            WriteTile("! ", ConsoleColor.White);
     }
     public static void WriteTile(string str, ConsoleColor color) {
         Console.ForegroundColor = color;
@@ -501,14 +524,14 @@ public static int GetChoice(params string[] Choices) {
     //     if (choice == 1) {
     //         // player.Narrate("The door stood tall and imposing, adorned with twisted horns portruding from every corner, their tips stained crimson with the blood of the unfortunate, each curve and jagged edge instills a primal fear in those who dare approach.");
     //         // player.Think("The plaque below the statue reads... \"protection for a price.\"");
-        // ChooseDeity("THE WANDERER"); // Turns false when the player enters the door.
+        // ChooseDeity("THE SACRIFICE"); // Turns false when the player enters the door.
     //         if (!flag)
-        player.SetDeity("THE WANDERER");
+        player.SetDeity(DeityEnum.Sacrifice);
         WandererRoute();
     //     } else if (choice == 2) {
     //         player.Narrate("The door stood tall and magical, adorned with twin masks, one serene and the other solemn, their intricate designs pulsating with an otherworldly glow, while delicate tendrils of shimmering mist curled around the edges, obscuring the threshold in a veil of enchantment, hinting at the mysteries that lie beyond.");
     //         player.Think("The plaque below the statue reads... \"Seek forbidden knowledge.\"");
-    //         flag = ChooseDeity("The Wisened");
+    //         flag = ChooseDeity("The Enigma");
     //         // if (!flag)
     //         //     WisenedRoute();
     //     } else if (choice == 3) {
