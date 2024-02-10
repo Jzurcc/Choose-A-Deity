@@ -40,6 +40,19 @@ public class Enemy(int x, int y) : Entity {
         EXP = NextInt(17+(player.Stage*3), 25+(player.Stage*3));
         Deity = DeityList[NextInt(DeityList.Count-1)];
         DeityName = "THE " + Deity.ToString().ToUpper();
+        HP = 3;
+        ATK = 3;
+        DEF = 3;
+        INT = 3;
+        SPD = 3;
+        LCK = 3;
+        LVL = player.Stage;
+        PTS = 10+(LVL*2);
+        RandomizePTS();
+        MaxEXP = 80 + LVL*20;
+        MaxHealth = 20 + HP*4;
+        Health = MaxHealth;
+        Armor = Math.Round(DEF*1.5);
 
         string[][] Names = [["Bloodbound Fiend", "Graveborn Revenant", "Painforged Emissary"], 
                             ["Mind Walker", "Twilight Herald", "Dream Specter"], 
@@ -52,6 +65,25 @@ public class Enemy(int x, int y) : Entity {
         for (int i = 0; i < DeityNames.Length; i++)
             if (Deity.ToString() == DeityNames[i])
                 Name = Names[i][NextInt(Names.Length-1)];
+    }
+    public void RandomizePTS() {
+        while (PTS > 0) {
+            double chance = RNG.NextDouble() + RNG.NextDouble();
+            if (chance < 0.6)
+                HP++;
+            else if (chance < 1.0)
+                ATK++;
+            else if (chance < 1.2)
+                DEF++;
+            else if (chance < 1.4)
+                INT++;
+            else if (chance < 1.8)
+                SPD++;
+            else if (chance < 2.0)
+                LCK++;
+
+            PTS--;
+        }
     }
     public void Defeat() {
         player.TotalKills++;
@@ -138,7 +170,7 @@ public class Entity {
     }
 
     public void EvaluateEXP() {
-        if (EXP >= MaxEXP) {
+        while (EXP >= MaxEXP) {
             PTS += 2;
             EXP -= MaxEXP;
             LVL++;
@@ -177,13 +209,21 @@ public class Entity {
     public Dictionary<int, string> GetStats() {
         Dictionary<int, string> StatsDict = [];
         StatsDict.Add(1, "   --------------------------------------------");
-        List<string> strings = [string.Format("   Level: {0, -13} Gold: {1}", LVL, GLD), string.Format("   Health: {0}/{1, -8} EXP: {2}/{3}", Health, MaxHealth, EXP, MaxEXP), string.Format("   Armor: {0, -13} Deity: {1}", Armor, DeityName), "   --------------------------------------------", string.Format("   HP: {0, -16} DEF: {1}", HP, DEF), string.Format("   ATK: {0, -15} INT: {1}", ATK, INT), string.Format("   SPD: {0, -15} LCK: {1}", SPD, LCK), string.Format("   Kills: {0, -13} Room: {1}", TotalKills, SacrificeKills, EnigmaKills, HarvestKills, EndKills, Stage)];
+        List<string> strings = [string.Format("   Level: {0, -13} Gold: {1}", LVL, GLD), string.Format("   Health: {0}/{1, -8} EXP: {2}/{3}", Health, MaxHealth, EXP, MaxEXP), string.Format("   Armor: {0, -13} Deity: {1}", Armor, DeityName), "   --------------------------------------------", string.Format("   HP: {0, -16} DEF: {1}", HP, DEF), string.Format("   ATK: {0, -15} INT: {1}", ATK, INT), string.Format("   SPD: {0, -15} LCK: {1}", SPD, LCK), string.Format("   Kills: {0, -13} Room: {1}", TotalKills, Stage)];
 
         for (var i = 0; i < strings.Count; i++)
             StatsDict.Add(2+i, strings[i]);
 
         return StatsDict;
     }
+
+    public void WriteStats() {
+        Console.WriteLine($"Name: {Name}");
+        List<string> strings = ["--------------------------------------------", string.Format("Level: {0, -13} Gold: {1}", LVL, GLD), string.Format("Health: {0}/{1, -8} EXP: {2}/{3}", Health, MaxHealth, EXP, MaxEXP), string.Format("Armor: {0, -13} Deity: {1}", Armor, DeityName), "--------------------------------------------", string.Format("HP: {0, -16} DEF: {1}", HP, DEF), string.Format("ATK: {0, -15} INT: {1}", ATK, INT), string.Format("SPD: {0, -15} LCK: {1}", SPD, LCK)];
+        for (var i = 0; i < strings.Count; i++)
+            Console.WriteLine(strings[i]);
+    }
+
     public void SetDeity(DeityEnum Deity) {
         if (Deity != DeityEnum.None) {
             DeityName = "THE " + Deity.ToString().ToUpper();
@@ -311,6 +351,7 @@ public class RoomGenerator {
     }
 
     public void InitializeEnemies(int maxEnemies) {
+        enemies.Clear();
         while (enemies.Count < maxEnemies) {
             int x = NextInt(1, xSize-1);
             int y = NextInt(1, ySize-1);
@@ -438,12 +479,33 @@ public class RoomGenerator {
     
     public static void Encounter(dynamic player, dynamic enemy) {
         Console.Clear();
-        Divider();
-        player.Narrate($"A wild {enemy.Name} appeared!", 5, 250);
-        player.Narrate($"Health: {enemy.MaxHealth} | Level {enemy.LVL}", 5, 250);
-        Divider();
+        player.Narrate($"A wild {enemy.Name} appeared!", 5, 600);
+        Sleep(375);
         Console.Clear();
+        PrintEnemy();
+        enemy.WriteStats();
         Divider();
+        Console.WriteLine();
+        player.WriteStats();
+        Console.WriteLine();
+        Divider();
+        switch (GetChoice("Attack", "Inventory", "Flee")) {
+            case 1:
+                Console.Clear();
+                Attack();
+                break;
+            case 2:
+                Console.Clear();
+                BattleInventory();
+                break;
+            case 3:
+                Console.Clear();
+                Flee();
+                break;
+        }
+
+        Console.ReadLine();
+        Console.Clear();
 
 
 
@@ -456,9 +518,45 @@ public class RoomGenerator {
         }
     }
     public static void Divider() {
-        Console.WriteLine("=================================");
+        Console.WriteLine("--------------------------------------------");
     }
 
+    public static void Attack() {
+
+    }
+    public static void BattleInventory() {
+
+    }
+    public static void Flee() {
+
+    }
+
+    public static void PrintEnemy() {
+        Console.WriteLine(@"
+░░░░░░░░░░░░░░░░░░░░░░░░▒░░░░░░░░░░░░▒▒░░░░░░░░░░░
+░░░░░░░░░▒▓▒░░░░░░░▒▓▓▓▓▓▓▓▓▒░░░▒▒▒▓▓▒░░░░░░░░░░░░
+░░░░░░░░░░░▒▓▓▓▒▒▓██▓▓▓▓▓▓▓▓██▓▓▓██▒░░░░░░░░░░░░░░
+░░░░░░░░░░░░░▓▓█▓▓██▓▓▓▓▓▓███▓███▒░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▒░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░░▒█▓▓▓▓▓▓▒▓▓▓▓▓▓▓░░▒░░░░░░░░░░░░░░░
+░░░░░░░░░░░░▒░░░▒██▓▓█▓▓▓▓▓▓▓█▓▓▒▓▓▒▒▒▒▒▓▓▒▒░░░░░░
+░░░░░▒▓▒▒▓▓█▓▓▓▓▓████▓▓▓████▓▓▓█▒▒▒░░░░▒▒▒▒▒▒░░░░░
+░░░░░▒▒▒░░░▓▓▒░░░▒▓█████▓▓▓▓▓▒░▒▒░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░▓▓▓▓▒▓▓▓█▓█▓▓▓▓██▓▓▓▓▒░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░▒▓▓▓▒▒▒▒███▓▓▓▓█▒░▒▓▓▓▒░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░░░░░▓████████▒▒▓▓▒░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░░░░░▓████▓█████▓░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░▒▒▒▓███▓▓▓█████▓░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░▒▒▒▓███▓▓█████▓██▓░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░▒▓▓▓██▓████████▓▓▓▓░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░▒▓▓▓▓▓▓█▓▓████▓▓▓▓▓░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░▒▓▓▓█▒░▒▓▓▓▓▓░▒█▓▓▓▒░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░▒▓▓▓█░░░░▒▓▒░░░▓▓▓▓▒░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░▒▓▓██░░░░░▓░░░░█▓▓▓▒░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░▒▓▓▓▓██░░░░░░░░░░██▓▓▓▓▒▒▒░░░░░░░░░░░░
+░░░░░░░░░░▒▓▓▓█▓▓░░░░░░░░░░░░░░▒▒▒▒▓▓▒░░░░░░░░░░░░
+");
+    }
 
     public void PrintRoom() {
         Console.WriteLine("\n\n");
