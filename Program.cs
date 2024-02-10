@@ -10,13 +10,13 @@ public enum DeityEnum { Sacrifice, Enigma, Harvest, End, None }
 public static DeityEnum DeityEnumeration = new();
 public static List<DeityEnum> DeityList = Enum.GetValues(typeof(DeityEnum)).Cast<DeityEnum>().ToList();
 // Deity Dialogue variables
-public static Player player = new(5, 5, ConsoleColor.White, "Player");
-public static Sacrifice SACRIFICE = new(30, 1000, ConsoleColor.DarkMagenta, "ENIGMA");
-public static Enigma ENIGMA = new(5, 5, ConsoleColor.DarkRed, "SACRIFICE"); // 42, 1300
-public static Harvest HARVEST = new(55, 1000, ConsoleColor.DarkGreen, "HARVEST");
-public static End END = new(50, 1000, ConsoleColor.Black, "END");
-public static Chaos CHAOS = new(60, 1000, ConsoleColor.DarkMagenta, "CHAOS");
-public static bool StageClear = false;
+public static Entity player = new(30, 750, ConsoleColor.White, "Player");
+public static Deity Sacrifice = new(5, 5, ConsoleColor.DarkRed, "SACRIFICE"); // 42, 1300
+public static Deity Enigma = new(30, 750, ConsoleColor.DarkMagenta, "ENIGMA");
+public static Deity Harvest = new(45, 800, ConsoleColor.DarkGreen, "HARVEST");
+public static Deity End = new(28, 1100, ConsoleColor.Black, "END");
+public static Deity Chaos = new(45, 700, ConsoleColor.DarkMagenta, "CHAOS");
+public static bool RoomClear = false;
 // Write the battle encounter system with interface that is similar to Undertale but in text-version. Whosoever's SPD is higher, they will go first. The options are: Attack, Inventory, Flee. When the player selects attack, an interface of possible attacks/skills will show, and the same goes for inventory. There should be numbers corresponding to the option to get player input (i.e., [1] Attack, [2] Inventory, etc.). 
 // Room global variables
 public static Tile[,] Room = new Tile[0, 0];
@@ -28,40 +28,23 @@ public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = Co
     public int tspeed = tspeed, tduration = tduration;
     public ConsoleColor color = color;
     public string name = name;
-        public void Talk(string str) {
+    public void Talk(string str) {
         Program.Print(str, tspeed, tduration, color, name);
     }
 }
-public class Sacrifice(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
-}
-public class Enigma(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-}
-public class Harvest(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
-}
-public class End(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
-}
-public class Chaos(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-}
-public class Deityless(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-
-}
-public class Enemy(int x, int y)
-    {
-    public int X = x, Y = y, EXP = NextInt(17+(player.Stage*3), 25+(player.Stage*3));
-    public int HP, ATK, DEF, INT, SPD, LCK, GLD;
-    public DeityEnum Deity = DeityList[NextInt(DeityList.Count-1)];
-    public string Name = "???", DeityName = "None";
+public class Enemy(int x, int y) : Entity {
     public bool IsDefeated = false;
     public void Initialize() {
+        EXP = NextInt(17+(player.Stage*3), 25+(player.Stage*3));
+        Deity = DeityList[NextInt(DeityList.Count-1)];
         DeityName = "THE " + Deity.ToString().ToUpper();
+
         string[][] Names = [["Bloodbound Fiend", "Graveborn Revenant", "Painforged Emissary"], 
                             ["Mind Walker", "Twilight Herald", "Dream Specter"], 
                             ["Bleeding Orchardgeist", "Weeping Golem", "Fanged Treant"], 
                             ["Voidborn Wraith", "Oblivion Scourge", "Ancient Desolator"]];
         string[] DeityNames = Enum.GetNames(typeof(DeityEnum));
+
         
         // Checks the deity of the enemy and assigns a name for it based on their deity.
         for (int i = 0; i < DeityNames.Length; i++)
@@ -100,7 +83,7 @@ public class Enemy(int x, int y)
     }
 }
 
-public class Player {
+public class Entity {
     // Dialogue variables
     public int tspeed, tduration;
     public ConsoleColor color;
@@ -113,7 +96,7 @@ public class Player {
     public DeityEnum Deity;
     // Map variables
     public int spawnX = NextInt(1, 20), spawnY = NextInt(1, 26);
-    public Player(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
+    public Entity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
         // Dialogue variables
         this.X = spawnX;
         this.Y = spawnY;
@@ -126,7 +109,7 @@ public class Player {
         this.inventory = [];
         this.DeityName = "None";
         this.Deity = DeityEnum.None;
-        this.ChosenDeity = new Deityless();
+        this.ChosenDeity = new Deity();
         // Attribute variables
         this.HP = 10;
         this.ATK = 10;
@@ -146,8 +129,8 @@ public class Player {
         this.IntMaxHealth = Convert.ToInt32(MaxHealth);
         this.Damage = ATK;
         this.Armor = Math.Round(DEF*1.5);
-    // Methods
     }
+    // Methods
     public void Talk(string str) {
         Program.Print(str, tspeed, tduration, color, name);
     }
@@ -161,11 +144,11 @@ public class Player {
         }
     }
     public void Think(string str) {
-        Program.Print(string.Format("({0})", str), tspeed, tduration, ConsoleColor.DarkGray);
+        Program.Print($"({str})", tspeed, tduration, ConsoleColor.DarkGray);
     }
 
-    public void Narrate(string str) {
-        Program.Print(string.Format("[{0}]", str), tspeed, tduration, ConsoleColor.White);
+    public void Narrate(string str, int speed = 5, int duration = 800, ConsoleColor color = ConsoleColor.White) {
+        Program.Print($"[{str}]", speed, duration, color);
     }
 
     public void Move(int dx, int dy) {
@@ -241,7 +224,7 @@ public static void WandererRoute() {
     // Sleep(400);
     // Sacrifice.Talk("BWAHAHAHAHAHA!");
     // player.Think("A monstrous horned-figure wearing devilish armor approached...");
-    SACRIFICE.name = "THE SACRIFICE";
+    // Sacrifice.name = "THE SACRIFICE";
     // Sacrifice.Talk("BLEED FOR YOUR MASTER, FOOL!");
     // player.Talk("...What are you?");
     // Sacrifice.Talk("I AM THE SACRIFICE, MASTER OF BLOOD AND BLADE, DeityEnum OF THE ENDLESS FRAY!");
@@ -282,7 +265,7 @@ public static void Print(string str, int speed = 5, int duration = 5, ConsoleCol
     Console.WriteLine();
     Sleep(duration);
     
-    Console.ResetColor();
+    Console.ForegroundColor = ConsoleColor.White;
 }
 
 public class RoomGenerator {
@@ -294,7 +277,7 @@ public class RoomGenerator {
         this.ySize = NextInt(25, 40);
     }
         public void InitializeRoom() {
-            StageClear = false;
+            RoomClear = false;
             Room = new Tile[xSize, ySize];
             // Set all tiles as empty tiles
             for (int x = 0; x < xSize; x++) {
@@ -317,7 +300,7 @@ public class RoomGenerator {
             // Initializes enemies and walls that scale with inner room area
             InitializeWalls((xSize-2)*(ySize-2)/5);
             InitializeEnemies(15+(xSize-2)*(ySize-2)/70); 
-            InitializeItems();
+            InitializeItems(NextInt(1, 5), NextInt(5, 10));
             // Randomizes and teleports player to random spawnpoint.
             player.spawnX = NextInt(1, 20);
             player.spawnY = NextInt(1, 26);
@@ -335,18 +318,22 @@ public class RoomGenerator {
             }
         }
     }
-    public void InitializeItems() {
-        int HealingPotions = NextInt(1, 6);
-        int Golds = NextInt(1, 5); 
-        int CurrentHealingPotions = 0, CurrentGolds = 0;
+    public void InitializeItems(int HealingPotions = 0, int Golds = 0) {
+        int CurrentHealingPotions = 0;
+        int CurrentGolds = 0;
+
         while (CurrentHealingPotions != HealingPotions || CurrentGolds != Golds) {
             int x = NextInt(1, xSize - 1);
             int y = NextInt(1, ySize - 1);
             
-            if (Room[x, y].Type == TileType.Empty && CurrentHealingPotions != HealingPotions)
+            if (Room[x, y].Type == TileType.Empty && CurrentHealingPotions != HealingPotions) {
                 Room[x, y] = new Tile(TileType.HealingPotion);
-            else if (Room[x, y].Type == TileType.Empty && CurrentGolds != Golds)
+                CurrentHealingPotions++;
+            }
+            else if (Room[x, y].Type == TileType.Empty && CurrentGolds != Golds) {
                 Room[x, y] = new Tile(TileType.Gold);
+                CurrentGolds++;
+            }
         }
 
     }
@@ -390,11 +377,6 @@ public class RoomGenerator {
                     enemies.RemoveAt(i);
             }
 
-            // Checks if player encounters enemy
-            foreach (Enemy enemy in enemies)
-                if (player.X == enemy.X && player.Y == enemy.Y) 
-                    Encounter(player, enemy);
-
             PrintRoom();
 
             flag = ProcessInput(); // Asks for input and returns false if input is q
@@ -413,17 +395,27 @@ public class RoomGenerator {
                     break;
                 case TileType.HealingPotion:
                     int HealAmount = NextInt(10, player.IntMaxHealth/5); // Determine the healing amount
-                    player.Health += Math.Clamp(HealAmount, HealAmount, player.MaxHealth);
+                    if (player.Health + HealAmount <= player.MaxHealth)
+                        player.Health += HealAmount;
+                    else
+                        HealAmount = 0;
+                    Console.WriteLine();
                     player.Narrate($"You found a Healing Potion! Restored {HealAmount} health.");
                     Room[player.X, player.Y] = new Tile(TileType.Empty);
                     break;
                 case TileType.Gold:
-                    int GoldAmount = NextInt(5, 5+(player.LCK*5/2));
+                    int GoldAmount = NextInt(5, (player.LCK*5/2)-15);
                     player.GLD += GoldAmount;
+                    Console.WriteLine();
                     player.Narrate($"You found Gold! Gained {GoldAmount} gold.");
                     Room[player.X, player.Y] = new Tile(TileType.Empty);
                     break;
             }
+
+            // Checks if player encounters enemy
+            foreach (Enemy enemy in enemies)
+                if (player.X == enemy.X && player.Y == enemy.Y) 
+                    Encounter(player, enemy);
         }
     }
     public void UsePortal() {
@@ -443,15 +435,27 @@ public class RoomGenerator {
     }
     
     public static void Encounter(dynamic player, dynamic enemy) {
-        Console.Write($" {enemy.Name}");
-    
+        Console.Clear();
+        Divider();
+        player.Narrate($"A wild {enemy.Name} appeared!", 5, 250);
+        player.Narrate($"Health: {enemy.MaxHealth} | Level {enemy.LVL}", 5, 250);
+        Divider();
+        Console.Clear();
+        Divider();
+
+
+
         enemy.Defeat();
-        if (player.TotalKills % 5 == 0 && !StageClear) {
+
+        // Checks if player has killed 5 enemies in the room and spawns a portal if so
+        if (player.TotalKills % 5 == 0 && !RoomClear) {
             Room[player.spawnX, player.spawnY] = new Tile(TileType.Portal);
-            StageClear = true;
+            RoomClear = true;
         }
     }
-
+    public static void Divider() {
+        Console.WriteLine("=================================");
+    }
 
 
     public void PrintRoom() {
@@ -465,24 +469,25 @@ public class RoomGenerator {
                     foreach (Enemy enemy in enemies) {
                         WriteEnemies(enemy, i, j);
                     }
-
-                // Writes the tiles according to type.
-                switch (Room[i, j].Type) {
-                    case TileType.Empty:
-                        WriteTile(". ", ConsoleColor.Black);
-                        break;
-                    case TileType.Wall:
-                        WriteTile("# ", ConsoleColor.Black);
-                        break;
-                    case TileType.Portal:
-                        WriteTile("O ", ConsoleColor.Blue);
-                        break;
-                    case TileType.HealingPotion:
-                        WriteTile("p ", ConsoleColor.Red);
-                        break;
-                    case TileType.Gold:
-                        WriteTile("o ", ConsoleColor.Yellow);
-                        break;
+                else {
+                    // Writes the tiles according to type.
+                    switch (Room[i, j].Type) {
+                        case TileType.Empty:
+                            WriteTile(". ", ConsoleColor.Black);
+                            break;
+                        case TileType.Wall:
+                            WriteTile("# ", ConsoleColor.Black);
+                            break;
+                        case TileType.Portal:
+                            WriteTile("O ", ConsoleColor.Blue);
+                            break;
+                        case TileType.HealingPotion:
+                            WriteTile("o ", ConsoleColor.Red);
+                            break;
+                        case TileType.Gold:
+                            WriteTile("o ", ConsoleColor.Yellow);
+                            break;
+                    }
                 }
 
                 // Prints interface
@@ -513,7 +518,7 @@ public class RoomGenerator {
     public static void WriteTile(string str, ConsoleColor color) {
         Console.ForegroundColor = color;
         Console.Write(str);
-        Console.ResetColor();
+        Console.ForegroundColor = ConsoleColor.White;
     }
      public static bool ProcessInput() {
         Console.Write("> ");
@@ -561,12 +566,12 @@ public static void DisplayTitle() {
 ████████▀    ███    █▀     ▀██████▀   ▀██████▀   ▄████████▀    ██████████        ███    █▀       ████████▀    ██████████ █▀      ▄████▀    ▀█████▀ 
 
 ");
-Console.ResetColor();
+Console.ForegroundColor = ConsoleColor.White;
 }
 
 public static int GetChoice(params string[] Choices) {
     int maxChoices = Choices.Length;
-    Console.ResetColor();
+    Console.ForegroundColor = ConsoleColor.White;
     Console.WriteLine();
     for (int i = 0; i < Choices.Length; i++) {
         Print(string.Format("[{0}] {1}", i+1, Choices[i].ToString()), 20, 100);
