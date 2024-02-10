@@ -24,17 +24,19 @@ public static RoomGenerator RoomGen = new();    public static List<Enemy> enemie
 // UI variables
 public static Random RNG = new();
 public static Dictionary<int, string> Interface = [];
-public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
+public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string Name = "???") {
     public int tspeed = tspeed, tduration = tduration;
     public ConsoleColor color = color;
-    public string name = name;
+    public string Name = Name;
     public void Talk(string str) {
-        Program.Print(str, tspeed, tduration, color, name);
+        Program.Print(str, tspeed, tduration, color, Name);
     }
 }
 public class Enemy(int x, int y) : Entity {
     public bool IsDefeated = false;
     public void Initialize() {
+        X = x;
+        Y = y;
         EXP = NextInt(17+(player.Stage*3), 25+(player.Stage*3));
         Deity = DeityList[NextInt(DeityList.Count-1)];
         DeityName = "THE " + Deity.ToString().ToUpper();
@@ -46,7 +48,7 @@ public class Enemy(int x, int y) : Entity {
         string[] DeityNames = Enum.GetNames(typeof(DeityEnum));
 
         
-        // Checks the deity of the enemy and assigns a name for it based on their deity.
+        // Checks the deity of the enemy and assigns a Name for it based on their deity.
         for (int i = 0; i < DeityNames.Length; i++)
             if (Deity.ToString() == DeityNames[i])
                 Name = Names[i][NextInt(Names.Length-1)];
@@ -88,7 +90,7 @@ public class Entity {
     public int tspeed, tduration;
     public ConsoleColor color;
     // Attribute variables
-    public string name, DeityName;
+    public string Name, DeityName;
     public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, MaxEXP, LVL, PTS, X, Y, Stage,  TotalKills, SacrificeKills, EnigmaKills, HarvestKills, EndKills, IntHealth, IntMaxHealth;
     public double Health, MaxHealth, Damage, Armor;
     public dynamic ChosenDeity;
@@ -96,7 +98,7 @@ public class Entity {
     public DeityEnum Deity;
     // Map variables
     public int spawnX = NextInt(1, 20), spawnY = NextInt(1, 26);
-    public Entity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
+    public Entity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string Name = "???") {
         // Dialogue variables
         this.X = spawnX;
         this.Y = spawnY;
@@ -104,7 +106,7 @@ public class Entity {
         this.tduration = tduration;
         this.color = color;
         // Info variables
-        this.name = name;
+        this.Name = Name;
         this.Stage = 1;
         this.inventory = [];
         this.DeityName = "None";
@@ -132,7 +134,7 @@ public class Entity {
     }
     // Methods
     public void Talk(string str) {
-        Program.Print(str, tspeed, tduration, color, name);
+        Program.Print(str, tspeed, tduration, color, Name);
     }
 
     public void EvaluateEXP() {
@@ -209,7 +211,7 @@ public class Entity {
 
 
 public static void WandererRoute() {
-    // Sacrifice.name = "???";
+    // Sacrifice.Name = "???";
     // player.Think("The door slammed shut as soon as I entered.");
     // player.Think("I feel an ominous figure watching me.");
     // Sleep(300);
@@ -224,7 +226,7 @@ public static void WandererRoute() {
     // Sleep(400);
     // Sacrifice.Talk("BWAHAHAHAHAHA!");
     // player.Think("A monstrous horned-figure wearing devilish armor approached...");
-    // Sacrifice.name = "THE SACRIFICE";
+    // Sacrifice.Name = "THE SACRIFICE";
     // Sacrifice.Talk("BLEED FOR YOUR MASTER, FOOL!");
     // player.Talk("...What are you?");
     // Sacrifice.Talk("I AM THE SACRIFICE, MASTER OF BLOOD AND BLADE, DeityEnum OF THE ENDLESS FRAY!");
@@ -252,11 +254,11 @@ public static void WandererRoute() {
 }
 
 
-public static void Print(string str, int speed = 5, int duration = 5, ConsoleColor color = ConsoleColor.White, string name = "") {
+public static void Print(string str, int speed = 5, int duration = 5, ConsoleColor color = ConsoleColor.White, string Name = "") {
     Console.ForegroundColor = color;
 
-    if (!string.IsNullOrEmpty(name))
-        str = str.Insert(0, name + ": ");
+    if (!string.IsNullOrEmpty(Name))
+        str = str.Insert(0, Name + ": ");
 
     foreach (char c in str) {
         Console.Write(c);
