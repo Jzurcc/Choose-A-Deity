@@ -480,9 +480,8 @@ public class Entity {
             LCK += 3;
             Skill3Timer = 2;
             Narrate($"They gained +3 SPD and +2 LCK!");
-        } else {
+        } else
             Narrate($"They failed! This skill is already in play!");
-        }
     }
 
     public void StealStrength(dynamic enemy) {
