@@ -2,11 +2,12 @@
 using static System.Threading.Thread;
 
 public class Program {
-public enum TileType { Empty, Wall, Portal }
+public enum TileType { Empty, Wall, Portal, HealingPotion, ManaPotion, Gold }
 public class Tile(TileType type) {
     public TileType Type { get; set; } = type;
 }
 public enum DeityEnum { Sacrifice, Enigma, Harvest, End, None }
+public static DeityEnum DeityEnumeration = new();
 public static List<DeityEnum> DeityList = Enum.GetValues(typeof(DeityEnum)).Cast<DeityEnum>().ToList();
 // Deity Dialogue variables
 public static Player player = new(5, 5, ConsoleColor.White, "Player");
@@ -15,13 +16,14 @@ public static Enigma ENIGMA = new(5, 5, ConsoleColor.DarkRed, "SACRIFICE"); // 4
 public static Harvest HARVEST = new(55, 1000, ConsoleColor.DarkGreen, "HARVEST");
 public static End END = new(50, 1000, ConsoleColor.Black, "END");
 public static Chaos CHAOS = new(60, 1000, ConsoleColor.DarkMagenta, "CHAOS");
-// Write the battle encounter system with interface that is similar to Undertale but in text-version. Whosever's SPD is higher, they will go first. The options are: Attack, Inventory, Flee. When the player selects attack, an interface of possible attacks/skills will show, and the same goes for inventory. There should be numbers corresponding to the option to get player input (i.e., [1] Attack, [2] Inventory, etc.). 
+public static bool StageClear = false;
+// Write the battle encounter system with interface that is similar to Undertale but in text-version. Whosoever's SPD is higher, they will go first. The options are: Attack, Inventory, Flee. When the player selects attack, an interface of possible attacks/skills will show, and the same goes for inventory. There should be numbers corresponding to the option to get player input (i.e., [1] Attack, [2] Inventory, etc.). 
 // Room global variables
 public static Tile[,] Room = new Tile[0, 0];
 public static RoomGenerator RoomGen = new();    public static List<Enemy> enemies = [];
 // UI variables
 public static Random RNG = new();
-public static Dictionary<int, string> Interface = new();
+public static Dictionary<int, string> Interface = [];
 public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") {
     public int tspeed = tspeed, tduration = tduration;
     public ConsoleColor color = color;
@@ -31,47 +33,45 @@ public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = Co
     }
 }
 public class Sacrifice(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-    public class Follower(int x, int y) : Enemy(x, y) {
-        public static string[] Names = ["Bloodbound Fiend", "Shadowflame Exarch", "Painforged Emissary"];
-        public string Name = Names[NextInt(Names.Length)];
-    }
+
 }
 public class Enigma(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-    public class Follower(int x, int y) : Enemy(x, y) {
-        public static string[] Names = ["Mind Walker", "Twilight Herald", "Dream Specter"];
-        public string Name = Names[NextInt(Names.Length)];
-    }
 }
 public class Harvest(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-    public class Follower(int x, int y) : Enemy(x, y) {
-        public static string[] Names = ["Bleeding Orchardgeist", "Weeping Golem", "Fanged Treant"];
-        public string Name = Names[NextInt(Names.Length)];
-    }
+
 }
 public class End(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
-    public class Follower(int x, int y) : Enemy(x, y) {
-            public static string[] Names = ["Voidborn Wraith", "Oblivion Scourge", "Ancient Desolator"];
-            public string Name = Names[NextInt(Names.Length)];
-        }
-    }
+
+}
 public class Chaos(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
 }
 public class Deityless(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string name = "???") : Deity(tspeed, tduration, color, name) {
 
 }
-public class Enemy(int x, int y) {
+public class Enemy(int x, int y)
+    {
     public int X = x, Y = y, EXP = NextInt(17+(player.Stage*3), 25+(player.Stage*3));
     public int HP, ATK, DEF, INT, SPD, LCK, GLD;
-    public DeityEnum Deity = DeityList[NextInt(DeityList.Count)];
+    public DeityEnum Deity = DeityList[NextInt(DeityList.Count-1)];
+    public string Name = "???", DeityName = "None";
     public bool IsDefeated = false;
+    public void Initialize() {
+        DeityName = "THE " + Deity.ToString().ToUpper();
+        string[][] Names = [["Bloodbound Fiend", "Graveborn Revenant", "Painforged Emissary"], 
+                            ["Mind Walker", "Twilight Herald", "Dream Specter"], 
+                            ["Bleeding Orchardgeist", "Weeping Golem", "Fanged Treant"], 
+                            ["Voidborn Wraith", "Oblivion Scourge", "Ancient Desolator"]];
+        string[] DeityNames = Enum.GetNames(typeof(DeityEnum));
+        
+        // Checks the deity of the enemy and assigns a name for it based on their deity.
+        for (int i = 0; i < DeityNames.Length; i++)
+            if (Deity.ToString() == DeityNames[i])
+                Name = Names[i][NextInt(Names.Length-1)];
+    }
     public void Defeat() {
         player.TotalKills++;
         player.EXP += EXP;
-        if (player.EXP >= player.MaxEXP) {
-            player.EXP -= player.MaxEXP;
-            player.LVL++;
-            player.UpdateStats();
-        }
+        player.EvaluateEXP();
         IsDefeated = true;
     }
 
@@ -106,7 +106,7 @@ public class Player {
     public ConsoleColor color;
     // Attribute variables
     public string name, DeityName;
-    public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, MaxEXP, LVL, X, Y, Stage,  TotalKills, SacrificeKills, EnigmaKills, HarvestKills, EndKills;
+    public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, MaxEXP, LVL, PTS, X, Y, Stage,  TotalKills, SacrificeKills, EnigmaKills, HarvestKills, EndKills, IntHealth, IntMaxHealth;
     public double Health, MaxHealth, Damage, Armor;
     public dynamic ChosenDeity;
     public List<dynamic> inventory;
@@ -135,19 +135,31 @@ public class Player {
         this.SPD = 10;
         this.LCK = 10;
         this.LVL = 1;
+        this.PTS = 0;
         // Stats variables
         this.GLD = 100;
         this.EXP = 0;
         this.MaxEXP = 80 + LVL*20;
         this.Health = 20 + HP*8;
+        this.IntHealth = Convert.ToInt32(Health);
         this.MaxHealth = Health;
+        this.IntMaxHealth = Convert.ToInt32(MaxHealth);
         this.Damage = ATK;
         this.Armor = Math.Round(DEF*1.5);
     // Methods
-    }    public void Talk(string str) {
+    }
+    public void Talk(string str) {
         Program.Print(str, tspeed, tduration, color, name);
     }
 
+    public void EvaluateEXP() {
+        if (EXP >= MaxEXP) {
+            PTS += 2;
+            EXP -= MaxEXP;
+            LVL++;
+            UpdateStats();
+        }
+    }
     public void Think(string str) {
         Program.Print(string.Format("({0})", str), tspeed, tduration, ConsoleColor.DarkGray);
     }
@@ -189,29 +201,29 @@ public class Player {
     }
     public void SetDeity(DeityEnum Deity) {
         if (Deity != DeityEnum.None) {
-            this.DeityName = "THE " + Deity.ToString().ToUpper();
+            DeityName = "THE " + Deity.ToString().ToUpper();
             DeityList.Remove(Deity);
         }
     }
 
     public void UpdateStats(bool updateHealth = false) {
-        this.MaxEXP = 80 + LVL*20;
-        this.MaxHealth = 20 + HP*8;
-        this.Armor = Math.Round(DEF*1.5);
+        MaxEXP = 80 + LVL*20;
+        MaxHealth = 20 + HP*8;
+        Armor = Math.Round(DEF*1.5);
         if (updateHealth)
-            this.Health = MaxHealth;
+            Health = MaxHealth;
     }
-}
-
-public static bool ChooseDeity(DeityEnum chosen) {
+    public bool ChooseDeity(DeityEnum chosen) {
     int choice = GetChoice("Enter the door.", "Go back.");
     if (choice == 1) {
-        player.SetDeity(chosen);
+        SetDeity(chosen);
         return false;
     } else
         return true;
-        
 }
+}
+
+
 
 public static void WandererRoute() {
     // Sacrifice.name = "???";
@@ -282,6 +294,7 @@ public class RoomGenerator {
         this.ySize = NextInt(25, 40);
     }
         public void InitializeRoom() {
+            StageClear = false;
             Room = new Tile[xSize, ySize];
             // Set all tiles as empty tiles
             for (int x = 0; x < xSize; x++) {
@@ -304,6 +317,7 @@ public class RoomGenerator {
             // Initializes enemies and walls that scale with inner room area
             InitializeWalls((xSize-2)*(ySize-2)/5);
             InitializeEnemies(15+(xSize-2)*(ySize-2)/70); 
+            InitializeItems();
             // Randomizes and teleports player to random spawnpoint.
             player.spawnX = NextInt(1, 20);
             player.spawnY = NextInt(1, 26);
@@ -312,14 +326,22 @@ public class RoomGenerator {
     }
 
     public void InitializeEnemies(int maxEnemies) {
-        DeityList.Remove(DeityEnum.None);
         while (enemies.Count < maxEnemies) {
             int x = NextInt(1, xSize-1);
             int y = NextInt(1, ySize-1);
-            if (Room[x, y].Type != TileType.Wall)
+            if (Room[x, y].Type != TileType.Wall) {
                 enemies.Add(new Enemy(x, y));
+                enemies[^1].Initialize();
+            }
         }
     }
+    public void InitializeItems() {
+        int HealingPotions = NextInt(1, 6);
+        int Golds = NextInt(1, 5); 
+        
+
+    }
+
     private void InitializeWalls(int numOfWalls) {
         for (int i = 0; i < numOfWalls; i++) {
             int x = NextInt(1, xSize - 1);
@@ -376,37 +398,55 @@ public class RoomGenerator {
             }
             
             // Checks if player's tile is a portal
-            if (Room[player.X, player.Y].Type == TileType.Portal) {
-                Console.Clear();
-                player.Narrate("You entered the portal.");
-                for (var i = 0; i < 3; i++) {
-                    Console.Write(". ");
-                    Sleep(450);
-                }
-
-                xSize = NextInt(25, 35);
-                ySize = NextInt(25, 40);
-                player.Stage++;
-                enemies.Clear();
-                InitializeRoom();
-                DisplayRoom();
+            switch (Room[player.X, player.Y].Type) {
+                case TileType.Portal:
+                    UsePortal();
+                    break;
+                case TileType.HealingPotion:
+                    int HealAmount = NextInt(10, player.IntMaxHealth/5); // Determine the healing amount
+                    player.Health += Math.Clamp(HealAmount, HealAmount, player.MaxHealth);
+                    player.Narrate($"You found a Healing Potion! Restored {HealAmount} health.");
+                    Room[player.X, player.Y] = new Tile(TileType.Empty);
+                    break;
+                case TileType.Gold:
+                    int GoldAmount = NextInt(5, 5+(player.LCK*5/2));
+                    player.GLD += GoldAmount;
+                    player.Narrate($"You found Gold! Gained {GoldAmount} gold.");
+                    Room[player.X, player.Y] = new Tile(TileType.Empty);
+                    break;
             }
-
         }
+    }
+    public void UsePortal() {
+        Console.Clear();
+        player.Narrate("You entered the portal.");
+        for (var i = 0; i < 3; i++) {
+            Console.Write(". ");
+            Sleep(450);
+        }
+
+        xSize = NextInt(25, 35);
+        ySize = NextInt(25, 40);
+        player.Stage++;
+        enemies.Clear();
+        InitializeRoom();
+        DisplayRoom();
     }
     
     public static void Encounter(dynamic player, dynamic enemy) {
-        foreach (DeityEnum i in DeityList)
-            Console.Write($" {i}");
+        Console.Write($" {enemy.Name}");
     
         enemy.Defeat();
-        if (player.TotalKills % 5 == 0)
+        if (player.TotalKills % 5 == 0 && !StageClear) {
             Room[player.spawnX, player.spawnY] = new Tile(TileType.Portal);
+            StageClear = true;
+        }
     }
 
 
 
     public void PrintRoom() {
+        Console.WriteLine("\n\n");
         for (int i = 0; i < xSize; i++) {
             for (int j = 0; j < ySize; j++) {
                 if (player.X == i && player.Y == j)
@@ -538,7 +578,7 @@ public static int GetChoice(params string[] Choices) {
     //     if (choice == 1) {
     //         // player.Narrate("The door stood tall and imposing, adorned with twisted horns portruding from every corner, their tips stained crimson with the blood of the unfortunate, each curve and jagged edge instills a primal fear in those who dare approach.");
     //         // player.Think("The plaque below the statue reads... \"protection for a price.\"");
-        // ChooseDeity("THE SACRIFICE"); // Turns false when the player enters the door.
+                // player.ChooseDeity(DeityEnum.Sacrifice); // Turns false when the player enters the door.
     //         if (!flag)
         player.SetDeity(DeityEnum.Sacrifice);
         WandererRoute();
