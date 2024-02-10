@@ -496,7 +496,7 @@ public class Entity {
 
     public void EndsEmbrace(dynamic enemy) {
         Narrate($"{Name} used End's Embrace!");
-        DMG = GetDMG();
+        DMG = GetDMG(TotalKills, );
     }
     
 }
