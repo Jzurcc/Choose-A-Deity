@@ -282,7 +282,7 @@ public static void Print(string str, int speed = 5, int duration = 5, ConsoleCol
     Console.WriteLine();
     Sleep(duration);
     
-    Console.ForegroundColor = ConsoleColor.White;
+    Console.ResetColor();
 }
 
 public class RoomGenerator {
@@ -338,7 +338,16 @@ public class RoomGenerator {
     public void InitializeItems() {
         int HealingPotions = NextInt(1, 6);
         int Golds = NextInt(1, 5); 
-        
+        int CurrentHealingPotions = 0, CurrentGolds = 0;
+        while (CurrentHealingPotions != HealingPotions || CurrentGolds != Golds) {
+            int x = NextInt(1, xSize - 1);
+            int y = NextInt(1, ySize - 1);
+            
+            if (Room[x, y].Type == TileType.Empty && CurrentHealingPotions != HealingPotions)
+                Room[x, y] = new Tile(TileType.HealingPotion);
+            else if (Room[x, y].Type == TileType.Empty && CurrentGolds != Golds)
+                Room[x, y] = new Tile(TileType.Gold);
+        }
 
     }
 
@@ -449,18 +458,32 @@ public class RoomGenerator {
         Console.WriteLine("\n\n");
         for (int i = 0; i < xSize; i++) {
             for (int j = 0; j < ySize; j++) {
+                // Writs the player and each of the enemies
                 if (player.X == i && player.Y == j)
                     WriteTile("Y ", ConsoleColor.Cyan);
                 else if (enemies.Any(enemy => enemy.X == i && enemy.Y == j))
                     foreach (Enemy enemy in enemies) {
                         WriteEnemies(enemy, i, j);
                     }
-                else if (Room[i, j].Type == TileType.Empty)
-                    WriteTile(". ", ConsoleColor.Black);
-                else if (Room[i, j].Type == TileType.Wall)
-                    WriteTile("# ", ConsoleColor.Black);
-                else if (Room[i, j].Type == TileType.Portal)
-                    WriteTile("O ", ConsoleColor.Blue);
+
+                // Writes the tiles according to type.
+                switch (Room[i, j].Type) {
+                    case TileType.Empty:
+                        WriteTile(". ", ConsoleColor.Black);
+                        break;
+                    case TileType.Wall:
+                        WriteTile("# ", ConsoleColor.Black);
+                        break;
+                    case TileType.Portal:
+                        WriteTile("O ", ConsoleColor.Blue);
+                        break;
+                    case TileType.HealingPotion:
+                        WriteTile("p ", ConsoleColor.Red);
+                        break;
+                    case TileType.Gold:
+                        WriteTile("o ", ConsoleColor.Yellow);
+                        break;
+                }
 
                 // Prints interface
                 Interface.Clear();
@@ -479,7 +502,7 @@ public class RoomGenerator {
 
     public static void WriteEnemies(Enemy enemy, int i, int j) {
         if (enemy.X == i && enemy.Y == j && enemy.Deity == DeityEnum.Sacrifice)
-            WriteTile("! ", ConsoleColor.Red);
+            WriteTile("! ", ConsoleColor.DarkRed);
         else if (enemy.X == i && enemy.Y == j && enemy.Deity == DeityEnum.Enigma)
             WriteTile("! ", ConsoleColor.DarkMagenta);
         else if (enemy.X == i && enemy.Y == j && enemy.Deity == DeityEnum.Harvest)
@@ -490,7 +513,7 @@ public class RoomGenerator {
     public static void WriteTile(string str, ConsoleColor color) {
         Console.ForegroundColor = color;
         Console.Write(str);
-        Console.ForegroundColor = ConsoleColor.White;
+        Console.ResetColor();
     }
      public static bool ProcessInput() {
         Console.Write("> ");
@@ -538,12 +561,12 @@ public static void DisplayTitle() {
 ████████▀    ███    █▀     ▀██████▀   ▀██████▀   ▄████████▀    ██████████        ███    █▀       ████████▀    ██████████ █▀      ▄████▀    ▀█████▀ 
 
 ");
-Console.ForegroundColor = ConsoleColor.White;
+Console.ResetColor();
 }
 
 public static int GetChoice(params string[] Choices) {
     int maxChoices = Choices.Length;
-    Console.ForegroundColor = ConsoleColor.White;
+    Console.ResetColor();
     Console.WriteLine();
     for (int i = 0; i < Choices.Length; i++) {
         Print(string.Format("[{0}] {1}", i+1, Choices[i].ToString()), 20, 100);
