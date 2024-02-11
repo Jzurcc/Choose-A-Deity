@@ -26,7 +26,7 @@ public static Random RNG = new();
 public static Dictionary<int, string> Interface = [];
 
 // Combat global variables
-public int Turn = 0;
+public static int Turn = 0;
 public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string Name = "???") {
     public int tspeed = tspeed, tduration = tduration;
     public ConsoleColor color = color;
@@ -127,7 +127,8 @@ public class Entity {
     public int tspeed, tduration;
     public ConsoleColor color;
     // Attribute variables
-    public string Name, DeityName, Skill1, Skill2, Skill3, Skill4, Skill5;
+    public string Name, DeityName;
+    public dynamic Skill1, Skill2, Skill3, Skill4, Skill5;
     public int Skill1Timer, Skill2Timer, Skill3Timer, Skill4Timer, Skill5Timer;
     public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, MaxEXP, LVL, PTS, IntHealth, IntMaxHealth, ATKM;
     public double Health, MaxHealth, DMG, Armor, FinalDMG;
@@ -290,22 +291,22 @@ public class Entity {
 
     // Decreases Health slightly but increases ATK significantly for the attack.
     public void BloodStrike(dynamic enemy) {
-            Health -= MaxHealth*0.09;
+            Health -= MaxHealth*0.05;
             ATK += 5;
             UpdateStats();
             Narrate($"{enemy.Name} used Blood Strike!");
             DMG = GetDMG(ATKM*2, enemy);
             if (CheckEvade(DMG, enemy)) 
-                Narrate($"{enemy.Name} got hit for {DMG} DMG in exchange of {Name}'s {MaxHealth*0.09} health!");
+                Narrate($"{enemy.Name} got hit for {DMG} DMG in exchange of {Name}'s {MaxHealth*0.05} health!");
             ATK -= 5;
             UpdateStats();
             
     }
     // Deals a percentage of the user's missing health to the enemy.
-    public void PainExchange(dynamic enemy) {
+    public void LifeDrain(dynamic enemy) {
         DMG = GetDMG((enemy.MaxHealth - enemy.Health)*0.25, enemy);
         enemy.Health -= DMG;
-        Narrate($"{Name} used Pain Exchange!");
+        Narrate($"{Name} used Life Drain!");
         if (CheckEvade(DMG, enemy)) 
             Narrate($"{enemy.Name} got hit for {DMG} DMG based on 25% of their missing health!");
     }
@@ -334,7 +335,7 @@ public class Entity {
             Narrate($"They failed! This skill is already in play!");
     }
     // Significantly reduces health but deals a significant percentage of it to the enemy.
-    public void CallSacrifice(dynamic enemy) {
+    public void UltimateSacrifice(dynamic enemy) {
         Narrate($"{Name} used Call Sacrifice!");
         DMG = GetDMG(enemy.MaxHealth*0.35, enemy);
         Health -= Health*0.25 - Armor;
@@ -345,17 +346,17 @@ public class Entity {
     }
     // Enigma Skills
     // Tinamad na ako
-    public void DarkBolt(dynamic enemy) {
+    public void SoulTrack(dynamic enemy) {
         DMG = INT*5/2 - INT*5/2*0.4;
         FinalDMG = NextInt(DMG-(INT*3/2*0.5), DMG+(INT*3/2*0.5));
         enemy.Health -= FinalDMG;
-        Narrate($"{Name} used Dark Bolt! ");
+        Narrate($"{Name} used Soul Track! ");
         if (CheckEvade(GetDMG(FinalDMG, enemy), enemy)) 
             Narrate($"{enemy.Name} got hit for {FinalDMG} DMG ignoring their armor!");
     }
-    public void RapidZap(dynamic enemy) {
+    public void Shadowflame(dynamic enemy) {
         DMG = INT*0.7;
-        Narrate($"{Name} used Rapid Zap!");
+        Narrate($"{Name} used Shadowflame!");
         int times = NextInt(1, 3);
         for (var i = 0; i <= times; i++) {
             FinalDMG = NextInt(DMG-(INT*3/2*0.5), DMG+(INT*3/2*0.5)) - enemy.Armor;
@@ -364,20 +365,21 @@ public class Entity {
                 enemy.Health -= FinalDMG;
             }
         }
-        Narrate($"Rapid Zap hit {times} times!");
+        Narrate($"Shadowflame hit {times} times!");
     }
     public void ManaVeil() {
         Narrate($"{Name} used Mana Veil!");
         if (Skill3Timer == 0) {
             DEF += 3;
+            SPD += 3;
             UpdateStats();
             Narrate($"They gained +3 DEF for two turns!");
             Skill3Timer = 2;
         } else
             Narrate($"They failed! This skill is already in play!");
     }
-    public void Confusion(dynamic enemy) {
-        Narrate($"{Name} used Confusion!");
+    public void ConjureIllussions(dynamic enemy) {
+        Narrate($"{Name} used Conjure Illussions!");
         if (Skill4Timer == 0) {
             enemy.ATK -= 3;
             enemy.SPD -= 3;
@@ -411,8 +413,8 @@ public class Entity {
             Narrate($"{Name} gained {HealedAmount} health!");
         }
     }
-    public void HarvestBounty(dynamic enemy) {
-        Narrate($"{Name} used Harvest Bounty!");
+    public void LuckyPunch(dynamic enemy) {
+        Narrate($"{Name} used Lucky Punch!");
         DMG = GetDMG(ATKM+NextInt(LCK*2), enemy);
         if (CheckEvade(DMG, enemy)) 
             Narrate($"{enemy.Name} got hit for {DMG} DMG based on luck!");
@@ -473,8 +475,8 @@ public class Entity {
                 Narrate($"{enemy.Name} got hit for {DMG} DMG!");
         }
     }
-    public void VoidMist() {
-        Narrate($"{Name} used Void Mist!");
+    public void ShroudedMist() {
+        Narrate($"{Name} used Shrouded Mist!");
         if (Skill3Timer == 0) {
             SPD += 3;
             LCK += 3;
@@ -494,9 +496,11 @@ public class Entity {
             Narrate($"They failed! This skill is already in play!");
     }
 
-    public void EndsEmbrace(dynamic enemy) {
-        Narrate($"{Name} used End's Embrace!");
-        DMG = GetDMG(TotalKills, );
+    public void Annhilation(dynamic enemy) {
+        Narrate($"{Name} used Annhilation!");
+        DMG = GetDMG(ATKM*(TotalKills+1), enemy);
+        if (CheckEvade(DMG, enemy))
+            Narrate($"{enemy.Name} got hit for {DMG} DMG based on {Name}'s kills!");
     }
     
 }
@@ -738,30 +742,12 @@ public class RoomGenerator {
         PrintEnemy(enemy);
         bool IsOver = false;
         while (!IsOver) {
-            Divider();
-            player.WriteStats();
-            Console.WriteLine();
-            Divider();
-
-            switch (GetChoice("Attack", "Inventory", "Show Enemy", "Flee")) {
-                case 1:
-                    Console.Clear();
-                    Attack();
-                    break;
-                case 2:
-                    Console.Clear();
-                    BattleInventory();
-                    break;
-                case 3:
-                    PrintEnemy(enemy);
-                    break;
-                case 4:
-                    Console.Clear();
-                    Flee();
-                    IsOver = true;
-                    break;
+            Turn++;
+            if (player.SPD >= enemy.SPD) {
+                IsOver = PlayerAction(enemy);
+            } else {
+                EnemyAction(enemy);
             }
-        Console.Clear();
         }
 
 
@@ -777,27 +763,232 @@ public class RoomGenerator {
     public static void Divider() {
         Console.WriteLine("--------------------------------------------");
     }
-
-    public static void Attack() {
-        Console.Clear();
-        string[] AttackList = [];
-        int maxChoices = AttackList.Length;
-        Console.ForegroundColor = ConsoleColor.White;
+    public static void EnemyAction(Enemy enemy) {
+        Divider();
+        enemy.WriteStats();
         Console.WriteLine();
-        for (int i = 0; i < AttackList.Length; i++)
-            Print(string.Format("[{0}] {1}", i+1, AttackList[i].ToString()), 20, 100);
-        
-        Console.Write("> ");
-        bool ValidChoice = int.TryParse( Console.ReadKey().KeyChar + "", out int Choice);
-
-        if (!ValidChoice || Choice < 1 || Choice > maxChoices) {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("\nInvalid Input. Please try again.");
-            Sleep(800);
-            Console.Clear();
-            Choice = GetChoice(AttackList);
+        Divider();
+        double ChosenSkill = RNG.NextDouble();
+        switch (enemy.Deity) {
+            case DeityEnum.Sacrifice:
+                SacrificeSkills(ChosenSkill, enemy);
+                break;
+            case DeityEnum.Enigma:
+                EnigmaSkills(ChosenSkill, enemy);
+                break;
+            case DeityEnum.Harvest:
+                HarvestSkills(ChosenSkill, enemy);
+                break;
+            case DeityEnum.End:
+                EndSkills(ChosenSkill, enemy);
+                break;
         }
 
+    }
+    public static void SacrificeSkills(double ChosenSkill, Enemy enemy) {
+        if (ChosenSkill < 0.3)
+            enemy.BloodStrike(player);
+        else if (ChosenSkill < 0.6)
+            enemy.LifeDrain(player);
+        else if (ChosenSkill < 0.75)
+            enemy.SacrificialPower(player);
+        else if (ChosenSkill < 0.9)
+            enemy.WeakenResolve(player);
+        else
+            enemy.UltimateSacrifice(player);
+    }
+    public static void EnigmaSkills(double ChosenSkill, Enemy enemy) {
+        if (ChosenSkill < 0.3)
+            enemy.SoulTrack(player);
+        else if (ChosenSkill < 0.6)
+            enemy.Shadowflame(player);
+        else if (ChosenSkill < 0.75)
+            enemy.ManaVeil();
+        else if (ChosenSkill < 0.9)
+            enemy.ConjureIllussions(player);
+        else
+            enemy.DimensionalRift(player);
+    }
+    public static void HarvestSkills(double ChosenSkill, Enemy enemy) {
+        if (ChosenSkill < 0.3)
+            enemy.ThornedWrath(player);
+        else if (ChosenSkill < 0.6)
+            enemy.LuckyPunch(player);
+        else if (ChosenSkill < 0.75)
+            enemy.Growth();
+        else if (ChosenSkill < 0.9)
+            enemy.Wither(player);
+        else
+            enemy.RootedRampage(player);
+    }
+    
+    public static void EndSkills(double ChosenSkill, Enemy enemy) {
+        if (ChosenSkill < 0.3)
+            enemy.SoulBleed(player);
+        else if (ChosenSkill < 0.6)
+            enemy.VoidSlash(player);
+        else if (ChosenSkill < 0.75)
+            enemy.ShroudedMist();
+        else if (ChosenSkill < 0.9)
+            enemy.StealStrength(player);
+        else
+            enemy.Annhilation(player);
+    }
+
+
+    public static bool PlayerAction(Enemy enemy) {
+        if (player.Skill3Timer != 0)
+            player.Skill3Timer--;
+        if (player.Skill4Timer != 0)
+            player.Skill4Timer--;
+
+        if (enemy.Skill3Timer != 0)
+            enemy.Skill3Timer--;
+        if (enemy.Skill4Timer != 0)
+            enemy.Skill4Timer--;
+        
+        Divider();
+        player.WriteStats();
+        Console.WriteLine();
+        Divider();
+        switch (GetChoice("Attack", "Inventory", "Show Enemy", "Flee")) {
+            case 1:
+                Console.Clear();
+                Attack(enemy);
+                break;
+            case 2:
+                Console.Clear();
+                BattleInventory();
+                break;
+            case 3:
+                PrintEnemy(enemy);
+                break;
+            case 4:
+                Console.Clear();
+                Flee();
+                return true;
+        }
+        Console.Clear();
+        return false;
+    }
+
+    public static void Attack(Enemy enemy) {
+        int Choice, maxChoices;
+        bool ValidChoice;
+        do {
+            Console.Clear();
+            string[] AttackList = [];
+            player.UpdateStats();
+            switch(player.Deity) {
+                case DeityEnum.Sacrifice:
+                    AttackList = [$"Blood Strike - Damage: {player.ATKM*2} DMG, Cost: 5% Max Health", $"Life Drain - Damage: {(enemy.MaxHealth - enemy.Health)*0.25} DMG", "Sacrificial Power - Effect: +3 ATK & +3 SPD", "Weaken Resolve - Effect: Enemy -6 DEF", $"Ultimate Sacrifice - Damage: {enemy.MaxHealth*0.35} DMG, Cost: 25% Current Health"];
+                    break;
+                case DeityEnum.Enigma:
+                    AttackList = [$"Soul Track - Damage: {player.INT*5/2 - player.INT*5/2*0.4} DMG", $"Shadowflame - Damage: {player.INT*3/2*0.5} DMG", $"Mana Veil - Effect: +3 DEF & +3 SPD", $"Conjure Illussions - Effect: Enemy -3 ATK & -3 SPD", $"Dimensional Rift - Damage: {player.INT*3/2*0.5} DMG, Effect: +5 SPD"];
+                    break;
+                case DeityEnum.Harvest:
+                    AttackList = [$"Thorned Wrath - Damage: {player.ATKM+player.LCK/2} DMG, Effect: {player.LCK*0.4}% chance to heal {Math.Clamp(player.Health + player.LCK*0.4*0.5, 0, player.MaxHealth)}", $"Lucky Punch - Damage: {player.ATKM+player.LCK*2} DMG", $"Growth - Effect: Gain {player.MaxHealth*0.2} health for two turns", $"Wither - Effect: Enemy -3 SPD & -3 INT", $"Rooted Rampage - Damage: {player.LCK*1.5} DMG 3-6 times"];
+                    break;
+                case DeityEnum.End:
+                    AttackList = [$"Sould Bleed - Damage: {player.ATKM*1.2} DMG & 1-{enemy.MaxHealth*0.05} DMG 0-3 times", $"Void Slash - Damage: {player.ATKM*1.1} DMG 1-4 times", $"Shrouded Mist - Effect: +3 SPD & +3 LCK", $"Steal Strength - Effect: +4 ATK & Enemy -4 ATK", $"Annhilation - Damage: {player.ATKM*(player.TotalKills+1)} DMG"];
+                    break;
+            }
+            
+            maxChoices = AttackList.Length;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine();
+            for (int i = 0; i < AttackList.Length; i++)
+                Print(string.Format("[{0}] {1}", i+1, AttackList[i].ToString()), 20, 100);
+            
+            Console.Write("> ");
+            ValidChoice = int.TryParse( Console.ReadKey().KeyChar + "", out Choice);
+
+            if (!ValidChoice || Choice < 1 || Choice > maxChoices) {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nInvalid Input. Please try again.");
+                Sleep(800);
+                Console.Clear();
+            }
+        } while (!ValidChoice || Choice < 1 || Choice > maxChoices);
+
+        switch(player.Deity) {
+            case DeityEnum.Sacrifice:
+                switch (Choice) {
+                    case 1:
+                        player.BloodStrike(enemy);
+                        break;
+                    case 2:
+                        player.LifeDrain(enemy);
+                        break;
+                    case 3:
+                        player.SacrificialPower(enemy);
+                        break;
+                    case 4:
+                        player.WeakenResolve(enemy);
+                        break;
+                    case 5:
+                        player.UltimateSacrifice(enemy);
+                        break;
+                }
+                break;
+            case DeityEnum.Enigma:
+                switch (Choice) {
+                    case 1:
+                        player.SoulTrack(enemy);
+                        break;
+                    case 2:
+                        player.Shadowflame(enemy);
+                        break;
+                    case 3:
+                        player.ManaVeil();
+                        break;
+                    case 4:
+                        player.ConjureIllussions(enemy);
+                        break;
+                    case 5:
+                        player.DimensionalRift(enemy);
+                        break;
+                }
+                break;
+            case DeityEnum.Harvest:
+                switch (Choice) {
+                    case 1:
+                        player.ThornedWrath(enemy);
+                        break;
+                    case 2:
+                        player.LuckyPunch(enemy);
+                        break;
+                    case 3:
+                        player.Growth();
+                        break;
+                    case 4:
+                        player.Wither(enemy);
+                        break;
+                    case 5:
+                        player.RootedRampage(enemy);
+                        break;
+                }
+                break;
+            case DeityEnum.End:
+                switch (Choice) {
+                    case 1:
+                        player.SoulBleed(enemy);
+                        break;
+                    case 2:
+                        player.VoidSlash(enemy);
+                        break;
+                    case 3:
+                        player.ShroudedMist();
+                        break;
+                    case 4:
+                        player.StealStrength(enemy);
+                        break;
+                    case 5:
+                        player.Annhilation(enemy);
+                        break;
+                }
+                break;
+        }
 
         Console.Clear();
 
