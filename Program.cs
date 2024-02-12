@@ -107,7 +107,7 @@ public static void SacrificeRoute() {
     Console.WriteLine();
     player.Narrate("You chose Sacrifice as your Deity.");
     player.Narrate("Experience the worst to become the best.");
-    player.Narrate("Effects: ++ HP, + DEF, - GLD, - ATK, - SPD");
+    player.Narrate("\nEffects: ++ HP, + DEF, - GLD, - ATK, - SPD");
     player.Narrate("Sacrificial Dagger was added to your inventory.");
     Console.WriteLine("\nPress any key to continue...");
     Console.ReadKey();
@@ -139,7 +139,7 @@ public static void EnigmaRoute() {
     Console.WriteLine();
     player.Narrate("You chose The Enigma as your Deity.");
     player.Narrate("To know the unknown, to see the unseen.");
-    player.Narrate("Effects: ++ INT, + PTS, -- ATK, - HP");
+    player.Narrate("\nEffects: ++ INT, + PTS, -- ATK, - HP");
     player.Narrate("Dark Prism was added to your inventory.");
     Console.WriteLine("\nPress any key to continue...");
     Console.ReadKey();
@@ -180,7 +180,7 @@ public static void HarvestRoute() {
     Harvest.Talk("Stray from darkness, and you shall live to see the end of time.");
     Console.WriteLine();
     player.Narrate("You chose Harvest as your deity.");
-    player.Narrate("Effects: ++ LCK, + PTS, -- SPD, - DEF");
+    player.Narrate("\nEffects: ++ LCK, + PTS, -- SPD, - DEF");
     player.inventory.Add("Eternal Hourglass");
     player.Narrate("Eternal Hourglass was added to your inventory.");
     Console.WriteLine("\nPress any key to continue...");
@@ -214,7 +214,7 @@ public static void EndRoute() {
     Console.WriteLine();
     player.Narrate("You chose End as your deity.");
     player.Narrate("To seek him is to accept the inescapable truth of all things.");
-    player.Narrate("Effects: ++ ATK, + SPD, -- DEF, - HP");
+    player.Narrate("\nEffects: ++ ATK, + SPD, -- DEF, - HP");
     player.inventory.Add("Void Cloak");
     player.Narrate("Void Cloak was added to your inventory.");
     player.ATK += 5;
@@ -874,9 +874,14 @@ public class Enemy(int x, int y) : Entity {
         UpdateStats(true);
     }
     public void Defeat() {
-        player.Health += player.MaxHealth*0.2;
-        Print("Regenerated {player.MaxHealth*0.2} health!");
-        Sleep(450);
+        int HealAmount = player.MaxHealth*0.2;
+        if (player.Health + HealAmount <= player.MaxHealth)
+            player.Health += HealAmount;
+        else
+            HealAmount -= player.Health + HealAmount - player.MaxHealth;
+        player.Health = HealAmount;
+        Print($"Regenerated {HealAmount} health!");
+        Sleep(800);
         player.RoomKills++;
         player.TotalKills++;
         player.EXP += EXPDrop;
@@ -1040,7 +1045,7 @@ public class RoomGenerator {
                     if (player.Health + HealAmount <= player.MaxHealth)
                         player.Health += HealAmount;
                     else
-                        HealAmount = 0;
+                        HealAmount -= player.Health + HealAmount - player.MaxHealth;
                     Console.WriteLine();
                     player.Narrate($"Restored {HealAmount} health.", 5, 50);
                     Room[player.X, player.Y] = new Tile(TileType.Empty);
@@ -1115,7 +1120,7 @@ public class RoomGenerator {
                 EnemyTurn(enemy);
                 PlayerTurn(enemy);
             }
-            CheckHealth(enemy);
+            if(!IsOver) CheckHealth(enemy);
         } while (!IsOver);
 
         // Checks if player has killed 5 enemies in the room and spawns a portal if so
@@ -1139,33 +1144,31 @@ public class RoomGenerator {
     }
 
     public static void EnemyTurn(Enemy enemy) {
-        PrintEnemy(enemy, false, false);
-        if(!IsOver) {
-            Divider();
-            enemy.WriteStats();
-            Console.WriteLine();
-            Divider();
-            // Chooses a random skill based on the enemy's deity. The percentage of which skill to use is specific for each deity.
-            double ChosenSkill = RNG.NextDouble();
-            switch (enemy.Deity) {
-                case DeityEnum.Sacrifice:
-                    SacrificeSkills(ChosenSkill, enemy);
-                    break;
-                case DeityEnum.Enigma:
-                    EnigmaSkills(ChosenSkill, enemy);
-                    break;
-                case DeityEnum.Harvest:
-                    HarvestSkills(ChosenSkill, enemy);
-                    break;
-                case DeityEnum.End:
-                    EndSkills(ChosenSkill, enemy);
-                    break;
-            }
-            CheckHealth(enemy);
-            Console.WriteLine("Press any key to continue...");
-            Console.ReadKey();
-            Console.Clear();
+        if(!IsOver) CheckHealth(enemy);
+        Divider();
+        enemy.WriteStats();
+        Console.WriteLine();
+        Divider();
+        // Chooses a random skill based on the enemy's deity. The percentage of which skill to use is specific for each deity.
+        double ChosenSkill = RNG.NextDouble();
+        switch (enemy.Deity) {
+            case DeityEnum.Sacrifice:
+                SacrificeSkills(ChosenSkill, enemy);
+                break;
+            case DeityEnum.Enigma:
+                EnigmaSkills(ChosenSkill, enemy);
+                break;
+            case DeityEnum.Harvest:
+                HarvestSkills(ChosenSkill, enemy);
+                break;
+            case DeityEnum.End:
+                EndSkills(ChosenSkill, enemy);
+                break;
         }
+        if(!IsOver) CheckHealth(enemy);
+        Console.WriteLine("Press any key to continue...");
+        Console.ReadKey();
+        Console.Clear();
     }
 
     public static void SacrificeSkills(double ChosenSkill, Enemy enemy) {
@@ -1220,7 +1223,6 @@ public class RoomGenerator {
 
 
     public static void PlayerTurn(Enemy enemy) {
-        CheckHealth(enemy);
         bool StayTurn = false;
         do {
             if (!IsOver) {
@@ -1252,7 +1254,7 @@ public class RoomGenerator {
                 Console.Clear();
             }
         } while(StayTurn);
-        CheckHealth(enemy);
+        if(!IsOver) CheckHealth(enemy);
     }
 
     public static void EvaluateTimers(Enemy enemy) {
@@ -2716,8 +2718,6 @@ public class RoomGenerator {
             Console.Clear();
         }
         Console.WriteLine("\n");
-        CheckHealth(enemy);
-        
     }
 
     public void PrintRoom() {
