@@ -10,13 +10,12 @@ public enum MenuEnum {Level, None, Inventory}
 public static MenuEnum menu = new();
 public static List<DeityEnum> DeityList = Enum.GetValues(typeof(DeityEnum)).Cast<DeityEnum>().ToList();
 // Deity Dialogue variables
-public static Entity player = new(30, 750, ConsoleColor.White, "Player");
-public static Deity Sacrifice = new(5, 5, ConsoleColor.DarkRed, "SACRIFICE"); // 42, 1300 Warrior equivalent
+public static Entity player = new(10, 750, ConsoleColor.White, "Player");
+public static Deity Sacrifice = new(25, 750, ConsoleColor.DarkRed, "SACRIFICE"); // Warrior equivalent
 public static Deity Enigma = new(30, 750, ConsoleColor.DarkMagenta, "ENIGMA"); // Mage equivalent
-public static Deity Harvest = new(45, 800, ConsoleColor.DarkGreen, "HARVEST"); // Archer equivalent
+public static Deity Harvest = new(40, 800, ConsoleColor.DarkGreen, "HARVEST"); // Archer equivalent
 public static Deity End = new(28, 1100, ConsoleColor.Black, "END"); // Assassin equivalent
 public static Deity Chaos = new(45, 700, ConsoleColor.White, "CHAOS"); // Hidden class
-// Write the battle encounter system with interface that is similar to Undertale but in text-version. Whosoever's SPD is higher, they will go first. The options are: Attack, Inventory, Flee. When the player selects attack, an interface of possible attacks/skills will show, and the same goes for inventory. There should be numbers corresponding to the option to get player input (i.e., [1] Attack, [2] Inventory, etc.). 
 // Room global variables
 public static double GrowthAmount = 0;
 public static Tile[,] Room = new Tile[0, 0];
@@ -297,7 +296,7 @@ public class Entity {
 
     public void WriteStats() {
         Console.WriteLine($"Name: {Name}");
-        List<string> strings = ["--------------------------------------------", string.Format("Level: {0, -13} Gold: {1}", LVL, GLD), string.Format("Health: {0}/{1, -8} EXP: {2}/{3}", Health, MaxHealth, EXP, MaxEXP), string.Format("Points: {0, -13} Deity: {1}", PTS, DeityName), "--------------------------------------------", string.Format("HP: {0, -16} DEF: {1}", HP, DEF), string.Format("ATK: {0, -15} INT: {1}", ATK, INT), string.Format("SPD: {0, -15} LCK: {1}", SPD, LCK),  string.Format("Kills: {0, -13}", TotalKills)];
+        List<string> strings = ["--------------------------------------------", string.Format("Level: {0, -13} Gold: {1}", LVL, GLD), string.Format("Health: {0:0}/{1, -8} EXP: {2}/{3}", Health, MaxHealth, EXP, MaxEXP), string.Format("Points: {0, -13} Deity: {1}", PTS, DeityName), "--------------------------------------------", string.Format("HP: {0, -16} DEF: {1}", HP, DEF), string.Format("ATK: {0, -15} INT: {1}", ATK, INT), string.Format("SPD: {0, -15} LCK: {1}", SPD, LCK),  string.Format("Kills: {0, -13}", TotalKills)];
         for (var i = 0; i < strings.Count; i++)
             Console.WriteLine(strings[i]);
     }
@@ -352,18 +351,38 @@ public class Entity {
         "End: You are naught before me.",
         "End: Become none.",
         "End: Return to nothing.",
-        "End: Silence now."]
+        "End: Silence now."];
         if (player.Deity == DeityEnum.Sacrifice)
             DeathMSG = DeathMSGs[NextInt(8)];
         else if (player.Deity == DeityEnum.Enigma)
             DeathMSG = DeathMSGs[NextInt(9, 18)];
-        else if (player>Deity == Deity.Harvest)
+        else if (player.Deity == DeityEnum.Harvest)
             DeathMSG = DeathMSGs[NextInt(18, 28)];
         else 
             DeathMSG = DeathMSGs[NextInt(28, 37)];
 
+        Console.WriteLine("\n\n");
+        Sleep(300);
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine(@"
+▄██   ▄    ▄██████▄  ███    █▄          ▄█    █▄       ▄████████  ▄█    █▄     ▄████████      ████████▄   ▄█     ▄████████ ████████▄  
+███   ██▄ ███    ███ ███    ███        ███    ███     ███    ███ ███    ███   ███    ███      ███   ▀███ ███    ███    ███ ███   ▀███ 
+███▄▄▄███ ███    ███ ███    ███        ███    ███     ███    ███ ███    ███   ███    █▀       ███    ███ ███▌   ███    █▀  ███    ███ 
+▀▀▀▀▀▀███ ███    ███ ███    ███       ▄███▄▄▄▄███▄▄   ███    ███ ███    ███  ▄███▄▄▄          ███    ███ ███▌  ▄███▄▄▄     ███    ███ 
+▄██   ███ ███    ███ ███    ███      ▀▀███▀▀▀▀███▀  ▀███████████ ███    ███ ▀▀███▀▀▀          ███    ███ ███▌ ▀▀███▀▀▀     ███    ███ 
+███   ███ ███    ███ ███    ███        ███    ███     ███    ███ ███    ███   ███    █▄       ███    ███ ███    ███    █▄  ███    ███ 
+███   ███ ███    ███ ███    ███        ███    ███     ███    ███ ███    ███   ███    ███      ███   ▄███ ███    ███    ███ ███   ▄███ 
+ ▀█████▀   ▀██████▀  ████████▀         ███    █▀      ███    █▀   ▀██████▀    ██████████      ████████▀  █▀     ██████████ ████████▀  
+                                                                                                                                      ");
+        Console.ForegroundColor = ConsoleColor.White;
         Print(DeathMSG);
-        Print("Play again?;")
+        Print("\nDo you wish to play again?");
+        int input = GetChoice(0, 0, "Yes", "No");
+        if (input == 1)
+            Main();
+        else
+            Environment.Exit(0);
+
     }
 
     public void UpdateStats(bool updateHealth = false) {
@@ -400,7 +419,7 @@ public class Entity {
     // Checks if the DMG is evaded or not
     public bool CheckEvade(double DMG, dynamic enemy) {
         double chance = RNG.NextDouble();
-        if (1.0-LCK*0.02 > chance) {
+        if (1.0-LCK*0.01 > chance) {
             enemy.Health = Math.Clamp(enemy.Health - DMG, 0, enemy.MaxHealth);
             return true;
         } else {
@@ -528,7 +547,7 @@ public class Entity {
 
         double chance = RNG.NextDouble();
         if (LCK*0.04 > chance) {
-            double HealedAmount = DMG*0.5;
+            double HealedAmount = DMG*RNG.NextDouble()*0.04;
             Health += HealedAmount;
             Narrate($"{Name} gained {HealedAmount} health!");
         }
@@ -575,7 +594,7 @@ public class Entity {
     // End Skills
     public void SoulBleed(dynamic enemy) {
         Narrate($"{Name} used Soul Bleed!");
-        DMG = GetDMG(ATK*1.3, enemy, true);
+        DMG = GetDMG(ATK*0.7, enemy, true);
         if (CheckEvade(DMG, enemy)) {
             Narrate($"{enemy.Name} got hit for {DMG} DMG ignoring armor!");
             for (int i = 0; i < 3; i++) {
@@ -590,7 +609,7 @@ public class Entity {
         int times = NextInt(1, 4);
         for (int i = 0; i < times; i++)
         {
-            DMG = GetDMG(ATK*1.1, enemy);
+            DMG = GetDMG(ATK*0.9, enemy);
             if (CheckEvade(DMG, enemy)) 
                 Narrate($"{enemy.Name} got hit for {DMG} DMG!");
         }
@@ -619,7 +638,7 @@ public class Entity {
 
     public void Annhilation(dynamic enemy) {
         Narrate($"{Name} used Annhilation!");
-        DMG = GetDMG(ATK*1.5*(TotalKills+1), enemy);
+        DMG = GetDMG(ATK*0.5+ATK*0.2*(TotalKills+1), enemy);
         if (CheckEvade(DMG, enemy))
             Narrate($"{enemy.Name} got hit for {DMG} DMG based on {Name}'s kills!");
     }
@@ -658,10 +677,12 @@ public static void SacrificeRoute() {
     player.Narrate("You chose Sacrifice as your Deity.");
     player.Narrate("Experience the worst to become the best.");
     player.Narrate("Effects: ++ HP, + DEF, - GLD, - ATK, - SPD");
-    Sleep(500);
+    player.Narrate("Sacrificial Dagger was added to your inventory.");
+    Console.WriteLine("\nPress any key to continue...");
+    Console.ReadKey();
+    Console.Clear();
     player.Narrate("You have maddened the other deities.");
-    player.Narrate("They want your furious blood.");
-    Sleep(1500);
+    player.Narrate("They seek your furious blood.");
     player.HP += 5;
     player.DEF += 3;
     player.GLD -= 50;
@@ -680,7 +701,7 @@ public static void EnigmaRoute() {
     Enigma.Talk("Ah, seeker of truths untold...");
     Sleep(300);
     Enigma.Talk("In the labyrinth of the mind, do you find what you truly seek?");
-    player.Think("Before me, the shadows coalesce into a figure robed in twilight, their eyes yearning for unseen knowledge.");
+    Enigma.Talk("Before me, the shadows coalesce into a figure robed in twilight, their eyes yearning for unseen knowledge.");
     Enigma.Name = "ENIGMA";
     Enigma.Talk("Fear not, for I am Enigma, The Voice in the Whispering Abyss, The Deity of Unfathomable Secrets.");
     Enigma.Talk("Lend your eyes to me, should you seek to unravel the fabric of reality itself.");
@@ -688,15 +709,18 @@ public static void EnigmaRoute() {
     player.Narrate("You chose The Enigma as your Deity.");
     player.Narrate("To know the unknown, to see the unseen.");
     player.Narrate("Effects: ++ INT, + PTS, -- ATK, - HP");
-    Sleep(500);
+    player.Narrate("Dark Prism was added to your inventory.");
+    Console.WriteLine("\nPress any key to continue...");
+    Console.ReadKey();
+    Console.Clear();
     player.Narrate("You have intrigued the other deities.");
     player.Narrate("They seek to consume your unbound essence.");
-    Sleep(1500);
     player.INT += 5;
     player.PTS += 3;
     player.HP -= 3;
     player.ATK -= 5;
     player.inventory.Add("Dark Prism");
+    
 }
 
 public static void HarvestRoute() {
@@ -709,7 +733,7 @@ public static void HarvestRoute() {
     Harvest.Talk("State your purpose or die by my hands.");
     player.Think("Instinctively, I got down on my knees.");
     player.Talk("Guidance.");
-    player.Sleep(500);
+    Sleep(500);
     Harvest.Talk("And why would I heed to you?");
     player.Talk("...");
     Sleep(750);
@@ -723,17 +747,20 @@ public static void HarvestRoute() {
     Harvest.Name = "HARVEST";
     Harvest.Talk("I, Harvest, Guardian of Time, Deity of Transcience, shall grant upon you the blessing to guard the cycle of life and death.");
     Harvest.Talk("Stray from darkness, and you shall live to see the end of time.");
-    Console.WriteLine("");
+    Console.WriteLine();
     player.Narrate("You chose Harvest as your deity.");
     player.Narrate("Effects: ++ LCK, + PTS, -- SPD, - DEF");
-    Sleep(500);
+    player.inventory.Add("Eternal Hourglass");
+    player.Narrate("Eternal Hourglass was added to your inventory.");
+    Console.WriteLine("\nPress any key to continue...");
+    Console.ReadKey();
+    Console.Clear();
     player.Narrate("You have alerted the other deities.");
     player.Narrate("They plan to erase your strong existence.");
     player.LCK += 6;
     player.PTS += 3;
     player.DEF -= 3;
     player.SPD -= 5;
-    player.inventory.Add("Eternal Hourglass");
 }
 
 public static void EndRoute() {
@@ -752,25 +779,28 @@ public static void EndRoute() {
     End.Talk("In the end, truth resides.");
     player.Think("A figure emerged from the void, not walking but existing from one moment to the next—cloaked in the inevitability of time.");
     Sleep(300);
-    End.Name = "THE END";
+    End.Name = "END";
     End.Talk("Everything converges here, at my feet.");
     player.Think("His voice was the sound of a closing book, the final echo in an empty hall.");
     player.Talk("...");
     Sleep(400);
-    End.Talk("I am End, The Last Embrace, The Void That Claims All, The Deity of Nonexistence.");
+    End.Talk("I am the End.");
     End.Talk("Your death shall serve for my purpose.");
     Console.WriteLine();
     player.Narrate("You chose End as your deity.");
     player.Narrate("To seek him is to accept the inescapable truth of all things.");
     player.Narrate("Effects: ++ ATK, + SPD, -- DEF, - HP");
+    player.inventory.Add("Void Cloak");
+    player.Narrate("Void Cloak was added to your inventory.");
     player.ATK += 5;
     player.SPD += 3;
     player.HP -= 3;
     player.DEF -= 5;
-    Sleep(500);
+    Console.WriteLine("\nPress any key to continue...");
+    Console.ReadKey();
+    Console.Clear();
     player.Narrate("You have frightened the other deities.");
     player.Narrate("They will do anything to kill you.");
-    Sleep(1500);
 }
 
 public static void DeitylessRoute() {
@@ -794,11 +824,12 @@ public static void DeitylessRoute() {
     Enigma.Talk("To traverse this realm without the allegiance to any deity? (Translation: To not pick anyone?)");
     Enigma.Talk("Not even to the boisterous, deafening crimson one? (Translation: Not even the loud, red one?)");
     Enigma.Talk("Does wisdom elude your tiny head, or is it a choice to embrace the void of ignorance?  (Translation: Are you okay in the head?)");
-    Enigma.Talk("Your perplexing disregard borders an unsolvable mystery, a puzzle that even I find myself pondering grevously. (Translation: Your stupidity is an enigma even to myself, seriously.)");
+    Enigma.Talk("Your perplexing disregard borders an unsolvable mystery, a puzzle that even I find myself pondering grievously. (Translation: Your stupidity is an enigma even to myself, seriously.)");
     player.Talk("...");
     End.Talk("Foolish mortal.");
     Sleep(250);
     End.Talk("Die.");
+    Console.WriteLine("\n\n");
     player.Die();
 }
 
@@ -851,7 +882,7 @@ public class RoomGenerator {
             // Initializes enemies and walls that scale with inner room area
             InitializeWalls((xSize-2)*(ySize-2)/6);
             InitializeEnemies(15+(xSize-2)*(ySize-2)/70); 
-            InitializeItems(NextInt(5, 10), NextInt(5, 10));
+            InitializeItems(NextInt(10+(player.Stage*2), 20+(player.Stage*2)), NextInt(5, 10));
             // Randomizes and teleports player to random spawnpoint.
             player.spawnX = NextInt(1, 20);
             player.spawnY = NextInt(1, 26);
@@ -1171,6 +1202,7 @@ public class RoomGenerator {
                 case 2:
                     Console.Clear();
                     BattleInventory();
+                    StayTurn = true;
                     break;
                 case 3:
                     PrintEnemy(enemy);
@@ -1202,10 +1234,10 @@ public class RoomGenerator {
                     AttackList = [$"Soul Track - Damage: {(player.INT*1.5*0.5).ToString("0")}-{(player.INT*1.5*1.5).ToString("0")} DMG", $"Shadowflame - Damage: {(player.INT*0.5*0.5).ToString("0")}-{(player.INT*0.5*1.5).ToString("0")} DMG 1-3 times", $"Mana Veil - Effect: +3 DEF & +3 SPD", $"Conjure Illusions - Effect: Enemy -3 ATK & -3 SPD", $"Dimensional Rift - Damage: {(player.INT*3*0.5).ToString("0")}-{(player.INT*3*1.5).ToString("0")} DMG, Effect: +5 SPD"];
                     break;
                 case DeityEnum.Harvest:
-                    AttackList = [$"Thorned Wrath - Damage: {(player.ATK+player.LCK*0.5*0.5).ToString("0")}-{(player.ATK+player.LCK*0.5*1.5).ToString("0")} DMG, Effect: {player.LCK*0.04*100}% chance to heal {Math.Clamp(player.Health + player.DMG*0.5, 0, player.MaxHealth).ToString("0")} Health", $"Lucky Punch - Damage: {(player.ATK*1.5*0.5).ToString("0")}-{(player.ATK*1.5+player.LCK*2*1.5).ToString("0")} DMG", $"Growth - Effect: Gain {(player.MaxHealth*0.2).ToString("0")} health for two turns", $"Wither - Effect: Enemy -3 SPD & -3 INT", $"Rooted Rampage - Damage: {(player.LCK*1.5).ToString("0")} DMG 3-6 times"];
+                    AttackList = [$"Thorned Wrath - Damage: {player.ATK*0.4+player.LCK*0.5} DMG, Effect: {player.LCK*0.04*100}% chance to heal {Math.Clamp(ATK*0.4+LCK*0.5*0.5, 0, player.MaxHealth).ToString("0")} Health", $"Lucky Punch - Damage: {(player.ATK*1.5*0.5).ToString("0")}-{(player.ATK*1.5+player.LCK*2*1.5).ToString("0")} DMG", $"Growth - Effect: Gain {(player.MaxHealth*0.2).ToString("0")} health for two turns", $"Wither - Effect: Enemy -3 SPD & -3 INT", $"Rooted Rampage - Damage: {(player.LCK*1.5).ToString("0")} DMG 3-6 times"];
                     break;
                 case DeityEnum.End:
-                    AttackList = [$"Soul Bleed - Damage: {player.ATK*1.3*0.5}-{player.ATK*1.3*1.5} DMG & {enemy.MaxHealth*0.1*0.5}-{enemy.MaxHealth*0.1*1.5} DMG 0-3 times", $"Void Slash - Damage: {player.ATK*1.1} DMG 1-4 times", $"Shrouded Mist - Effect: +3 SPD & +3 LCK", $"Steal Strength - Effect: +4 ATK & Enemy -4 ATK", $"Annhilation - Damage: {player.ATK*1.5*(player.TotalKills+1)} DMG"];
+                    AttackList = [$"Soul Bleed - Damage: {player.ATK*0.7} DMG & {enemy.MaxHealth*0.06} DMG 0-3 times", $"Void Slash - Damage: {player.ATK*0.9} DMG 1-4 times", $"Shrouded Mist - Effect: +3 SPD & +3 LCK", $"Steal Strength - Effect: +4 ATK & Enemy -4 ATK", $"Annhilation - Damage: {player.ATK*0.5+player.ATK*0.2*(player.TotalKills+1)} DMG"];
                     break;
             }
             AttackList.Add("Cancel");
@@ -1319,7 +1351,9 @@ public class RoomGenerator {
         return StayTurn;
     }
     public static void BattleInventory() {
-
+        foreach (KeyValuePair<int, string kvp in player.GetInventory())
+            Console.WriteLine(kvp.Value);
+        Consoel.ReadKey();
     }
     public static void Flee(Enemy enemy) {
         player.Skill3Timer = player.Skill4Timer = enemy.Skill3Timer = enemy.Skill4Timer = 0;
@@ -2585,8 +2619,11 @@ public class RoomGenerator {
                 foreach (KeyValuePair<int, string> kvp in Interface)
                     if (i == kvp.Key && j == ySize-1) Console.Write(kvp.Value);
 
-                if (Menu != "" && player.PTS > 0) {
-                    Console.Write("Select the Stat you want to level up: [1] HP, [2] DEF, [3] ATK, [4] INT, [5] SPD, [6] LCK");
+                bool flag = true;
+                while (Menu != "" && flag) {
+                    Console.Clear();
+                    Console.Write("Select the Stat you want to level up:\n[1] HP \n[2] DEF \n[3] ATK \n[4] INT \n[5] SPD \n[6] LCK \n[E] Exit Menu\n> ");
+                    Menu = "";
                     input = char.ToLower(Console.ReadKey().KeyChar);
                     switch (input) {
                         case '1':
@@ -2612,6 +2649,12 @@ public class RoomGenerator {
                         case '6':
                             player.LCK++;
                             player.PTS--;
+                            break;
+                        case 'e':
+                            flag = false;
+                            break;
+                        default:
+                            Console.WriteLine("Invalid input. Try again.");
                             break;
                     }
                 }
@@ -2718,25 +2761,24 @@ public static int GetChoice(int speed = 0, int duration = 100, params string[] C
     return Choice;
 }
 
-    static void Main() {
+static void Main() {
     DisplayTitle();
     player.Think("A mind shattering pain pierced my head.");
     player.Think("I flinched from the pain and noticed something in front of me.");
-    player.Think("What is this place..?");
+    player.Talk("What is this place..?");
     player.Think("Four giant doors guarded by statues loom ominously before me.");
     bool flag = true;
     while (flag) {
-        // player.Talk("Where do I go?");
+        player.Talk("Where do I go?");
 
-        int choice = GetChoice("Blood-Horned Door", "Twin-Mask Door", "Thorn-Blooming Door", "Ankh-Ornated Door", "Simple Door");
+        int choice = GetChoice(1, 0, "Blood-Horned Door", "Twin-Mask Door", "Thorn-Blooming Door", "Ankh-Ornated Door", "Simple Door");
         player.Think("I approached the door.");
         if (choice == 1) {
-            // player.Narrate("The door stood tall and imposing, adorned with twisted horns portruding from every corner, their tips stained crimson with the blood of the unfortunate, each curve and jagged edge instills a primal fear in those who dare approach.");
-            // player.Think("The plaque below the statue reads... \"protection for a price.\"");
+            player.Narrate("The door stood tall and imposing, adorned with twisted horns portruding from every corner, their tips stained crimson with the blood of the unfortunate, each curve and jagged edge instills a primal fear in those who dare approach.");
+            player.Think("The plaque below the statue reads... \"protection for a price.\"");
                 player.ChooseDeity(DeityEnum.Sacrifice); // Turns false when the player enters the door.
-            if (!flag)
-        player.SetDeity(DeityEnum.Sacrifice);
-        SacrificeRoute();
+                if (!flag)
+                    SacrificeRoute();
         } else if (choice == 2) {
             player.Narrate("The door stood tall and magical, adorned with twin masks, one serene and the other solemn, their intricate designs pulsating with an otherworldly glow, while delicate tendrils of shimmering mist curled around the edges, obscuring the threshold in a veil of enchantment, hinting at the mysteries that lie beyond.");
             player.Think("The plaque below the statue reads... \"Seek forbidden knowledge.\"");
@@ -2757,25 +2799,18 @@ public static int GetChoice(int speed = 0, int duration = 100, params string[] C
                 EndRoute();
         } else if (choice == 5) {
             player.Narrate("There is no statue of a deity here. Only a simple door with no decoration remains.");
-            flag = player.ChooseDeity("None");
+            flag = player.ChooseDeity(DeityEnum.None);
             if (!flag)
                 DeitylessRoute();
         }
     }
-    UpdateStats(true);
+    Console.Write("\nPress any key to continue...");
+    Console.ReadKey();
+    player.UpdateStats(true);
     Console.Clear();
     RoomGen = new();
     RoomGen.InitializeRoom();
     RoomGen.DisplayRoom();
 }
-
-// Optimized RNG.Next()
-public static int NextInt(params dynamic[] n) {
-    Random RNG = new();
-    if (n.Length == 1)
-        return RNG.Next(n[0]);
-    else
-        return RNG.Next(n[0], n[1]);
-} 
 
 }
