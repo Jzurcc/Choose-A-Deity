@@ -97,39 +97,36 @@ public class Enemy(int x, int y) : Entity {
                 GLD -= 50;
                 ATK -= 3;
                 SPD -= 3;
-                UpdateStats();
                 break;
             case DeityEnum.Enigma:
                 INT += 5;
                 PTS += 3;
                 HP -= 3;
                 ATK -= 5;
-                UpdateStats();
                 break;
             case DeityEnum.Harvest:
                 LCK += 6;
                 PTS += 2;
                 DEF -= 3;
                 SPD -= 5;
-                UpdateStats();
                 break;
             case DeityEnum.End:
                 ATK += 5;
                 SPD += 3;
                 HP -= 3;
                 DEF -= 5;
-                UpdateStats();
                 break;
         }
+        UpdateStats(true);
     }
     public void DistributePTS() {
         while (PTS > 0) {
             double chance = RNG.NextDouble();
-            if (chance < 0.18)
+            if (chance < 0.17)
                 HP++;
-            else if (chance < 0.36)
+            else if (chance < 0.34)
                 ATK++;
-            else if (chance < 0.52)
+            else if (chance < 0.51)
                 DEF++;
             else if (chance < 0.68)
                 INT++;
@@ -139,12 +136,14 @@ public class Enemy(int x, int y) : Entity {
                 LCK++;
             PTS--;
         }
+        UpdateStats(true);
     }
     public void Defeat() {
         player.TotalKills++;
         player.EXP += EXP;
         player.EvaluateEXP();
         IsDefeated = true;
+        player.Skill3Timer = player.Skill4Timer = enemy.Skill3Timer = enemy.Skill4Timer = enemy.SkillTimer5 = player.Skill5Timer = 0;
     }
 
     // Method to randomly move the enemy
@@ -462,8 +461,10 @@ public class Entity {
             Skill3Timer += 2;
             Narrate("Gained +3 ATK and +3 SPD for two turns!");
             UpdateStats();
-        } else
-            Narrate($"Skill failed! This skill is already in play!");
+        } else {
+            Narrate($"This skill is already in play!");
+            Narrate($"Effect will last for two more turns!");
+        }
     }
     // Lowers the enemy's DEF and Armor for several turns.
     public void WeakenResolve(dynamic enemy) {
@@ -471,10 +472,12 @@ public class Entity {
         if (Skill4Timer == 0) {
             enemy.DEF -= 6;
             enemy.UpdateStats();
-            Skill4Timer = 2;
+            Skill4Timer = 3;
             Narrate($"{enemy.Name} gained -6 DEF for two turns!");
-        } else
-            Narrate($"Skill failed! This skill is already in play!");
+        } else {
+            Narrate($"This skill is already in play!");
+            Narrate($"Effect will last for two more turns!");
+        }
     }
     // Significantly reduces health but deals a significant percentage of it to the enemy.
     public void UltimateSacrifice(dynamic enemy) {
@@ -496,7 +499,7 @@ public class Entity {
             Narrate($"{enemy.Name} got hit for {DMG} DMG ignoring their armor!");
     }
     public void Shadowflame(dynamic enemy) {
-        DMG = INT*0.5;
+        DMG = INT*0.7;
         Narrate($"{Name} used Shadowflame!");
         int times = NextInt(1, 3);
         for (var i = 0; i < times; i++) {
@@ -514,26 +517,30 @@ public class Entity {
             SPD += 3;
             UpdateStats();
             Narrate($"Gained +3 DEF for two turns!");
-            Skill3Timer = 2;
-        } else
-            Narrate($"Skill failed! This skill is already in play!");
+            Skill3Timer = 3;
+        } else {
+            Narrate($"This skill is already in play!");
+            Narrate($"Effect will last for two more turns!");
+        }
     }
     public void ConjureIllusions(dynamic enemy) {
         Narrate($"{Name} used Conjure Illusions!");
         if (Skill4Timer == 0) {
             enemy.ATK -= 3;
             enemy.SPD -= 3;
-            Skill4Timer = 2;
+            Skill4Timer = 3;
             enemy.UpdateStats();
             Narrate($"{enemy.Name} gained -3 ATK and -3 SPD for two turns!");
-        } else
-            Narrate($"Skill failed! This skill is already in play!");
+        } else {
+            Narrate($"This skill is already in play!");
+            Narrate($"Effect will last for two more turns!");
+        }
     }
     public void DimensionalRift(dynamic enemy) {
         Narrate($"{Name} used Dimensional Rift!");
         SPD += 5;
         DMG = GetDMG(INT*3, enemy);
-        Skill5Timer = 2;
+        Skill5Timer = 3;
         
         if (CheckEvade(DMG, enemy)) 
             Narrate($"{enemy.Name} got hit for {DMG} DMG and {Name} gained +5 SPD for two turns!");
@@ -561,24 +568,28 @@ public class Entity {
     public void Growth() {
         Narrate($"{Name} used Growth!");
         if (Skill3Timer == 0) {
-            double HealedAmount = MaxHealth*0.2; 
+            double HealedAmount = MaxHealth*0.25; 
             GrowthAmount = HealedAmount;
             MaxHealth += HealedAmount;
             Health += HealedAmount;
-            Skill3Timer = 2;
+            Skill3Timer = 3;
             Narrate($"Gained {HealedAmount} max health for two turns!");
-        } else
-            Narrate($"Skill failed! This skill is already in play!");
+        } else {
+            Narrate($"This skill is already in play!");
+            Narrate($"Effect will last for two more turns!");
+        }
     }
     public void Wither(dynamic enemy) {
         Narrate($"{Name} used Wither!");
         if (Skill4Timer == 0) {
             enemy.SPD -= 3;
             enemy.INT -= 3;
-            Skill4Timer = 2;
+            Skill4Timer = 3;
             Narrate($"{enemy.Name} gained -3 SPD and -3 INT!");
-        } else
-            Narrate($"Skill failed! This skill is already in play!");
+        } else {
+            Narrate($"This skill is already in play!");
+            Narrate($"Effect will last for two more turns!");
+        }
     }
     public void RootedRampage(dynamic enemy) {
         int times = NextInt(3, 6);
@@ -594,7 +605,7 @@ public class Entity {
     // End Skills
     public void SoulBleed(dynamic enemy) {
         Narrate($"{Name} used Soul Bleed!");
-        DMG = GetDMG(ATK*0.7, enemy, true);
+        DMG = GetDMG(ATK*1.2, enemy, true);
         if (CheckEvade(DMG, enemy)) {
             Narrate($"{enemy.Name} got hit for {DMG} DMG ignoring armor!");
             for (int i = 0; i < 3; i++) {
@@ -609,7 +620,7 @@ public class Entity {
         int times = NextInt(1, 4);
         for (int i = 0; i < times; i++)
         {
-            DMG = GetDMG(ATK*0.9, enemy);
+            DMG = GetDMG(ATK*0.7, enemy);
             if (CheckEvade(DMG, enemy)) 
                 Narrate($"{enemy.Name} got hit for {DMG} DMG!");
         }
@@ -620,10 +631,12 @@ public class Entity {
         if (Skill3Timer == 0) {
             SPD += 3;
             LCK += 3;
-            Skill3Timer = 2;
+            Skill3Timer = 3;
             Narrate($"Gained +3 SPD and +2 LCK!");
-        } else
-            Narrate($"Skill failed! This skill is already in play!");
+        } else {
+            Narrate($"This skill is already in play!");
+            Narrate($"Effect will last for two more turns!");
+        }
     }
 
     public void StealStrength(dynamic enemy) {
@@ -632,8 +645,10 @@ public class Entity {
             enemy.ATK -= 4;
             ATK += 4;
             Narrate($"Gained +4 ATK and the enemy gained -4 ATK for two turns!");
-        } else
-            Narrate($"Skill failed! This skill is already in play!");
+        } else {
+            Narrate($"This skill is already in play!");
+            Narrate($"Effect will last for two more turns!");
+        }
     }
 
     public void Annhilation(dynamic enemy) {
@@ -773,18 +788,12 @@ public static void EndRoute() {
     Sleep(300);
     player.Think("The boundary between my being and non-being blurred.");
     player.Think("My breath became a whisper, so was my fleeting life in the vast expanse of nothingness.");
-    Sleep(300);
+    Sleep(600);
     End.Talk("...");
-    Sleep(300);
-    End.Talk("In the end, truth resides.");
+    Sleep(600);
     player.Think("A figure emerged from the void, not walking but existing from one moment to the next—cloaked in the inevitability of time.");
-    Sleep(300);
+    Sleep(800);
     End.Name = "END";
-    End.Talk("Everything converges here, at my feet.");
-    player.Think("His voice was the sound of a closing book, the final echo in an empty hall.");
-    player.Talk("...");
-    Sleep(400);
-    End.Talk("I am the End.");
     End.Talk("Your death shall serve for my purpose.");
     Console.WriteLine();
     player.Narrate("You chose End as your deity.");
@@ -1023,7 +1032,15 @@ public class RoomGenerator {
         PrintEnemy(enemy);
         IsOver = false;
         Turn = 0;
+        List<int> Timers = new();
         do {
+            Timers.Clear();
+            Timers = [player.Skill3Timer, player.Skill4Timer, player.Skill5Timer, enemy.Skill3Timer, enemy.Skill4Timer, enemy.Skill5Timer];
+            for (int i = 0; i < Timers.Length; i++) {
+                if (Timers[i] > 0)
+                    Timers[i]--;
+            }
+
             Turn++;
             if (player.SPD >= enemy.SPD) {
                 Print($"Turn {Turn}: The player goes first this round!");
@@ -1143,44 +1160,87 @@ public class RoomGenerator {
         CheckHealth(enemy);
         bool StayTurn = false;
         do {
-        if (!IsOver) {
-            StayTurn = false;
-            foreach (KeyValuePair<dynamic, dynamic> kvp in new Dictionary<dynamic, dynamic>(){{player, enemy}, {enemy, player}}) {
-                if (kvp.Key.Skill3Timer != 0 || kvp.Key.Skill4Timer != 0)
+            if (!IsOver) {
+                StayTurn = false;
+                EvaluateTimers(enemy);
+            
+            
+                Divider();
+                player.WriteStats();
+                Console.WriteLine();
+                Divider();
+                switch (GetChoice(0, 0, "Attack", "Inventory", "Show Enemy", "Flee")) {
+                    case 1:
+                        Console.Clear();
+                        StayTurn = Attack(enemy);
+                        break;
+                    case 2:
+                        Console.Clear();
+                        BattleInventory();
+                        StayTurn = true;
+                        break;
+                    case 3:
+                        PrintEnemy(enemy);
+                        StayTurn = true;
+                        break;
+                    case 4:
+                        Console.Clear();
+                        Narrate("You attempted to flee.");
+                        if (0.5+player.LCK*0.01 > RNG.NextDouble()) {
+                            Flee(enemy);
+                            IsOver = true;
+                        } else {
+                            Narrate("Your attempt failed.");
+                        }
+                        break;
+                }
+                Console.Clear();
+            }
+        } while(StayTurn);
+    }
+
+    public static EvaluateTimers(Enemy enemy) {
+        foreach (KeyValuePair<dynamic, dynamic> kvp in new Dictionary<dynamic, dynamic>(){{player, enemy}, {enemy, player}}) {
+                if (kvp.Key.Skill3Timer != 0 || kvp.Key.Skill4Timer != 0 || kvp.Key.Skill5Timer != 0) {
                     kvp.Key.Skill3Timer--;
+                    kvp.Key.Skill4Timer--;
+                    kvp.Key.Skill5Timer--;
+                }
                 else {
                     switch(kvp.Key.Deity) {
                         case DeityEnum.Sacrifice:
-                            if (kvp.Key.Skill3Timer != 0) {
+                            if (kvp.Key.Skill3Timer == 1) {
                                 kvp.Key.ATK -= 3;
                                 kvp.Key.SPD -= 3;
-                            } else if (kvp.Key.Skill4Timer != 0) {
+                            } else if (kvp.Key.Skill4Timer == 1) {
                                 kvp.Value.DEF += 6;
                             }
                             break;
                         case DeityEnum.Enigma:
-                            if (kvp.Key.Skill3Timer != 0) {    
+                            if (kvp.Key.Skill3Timer == 1) {    
                                 kvp.Key.DEF -= 3;
                                 kvp.Key.SPD -= 3;
-                            } else if (kvp.Key.Skill4Timer != 0) {
+                            } else if (kvp.Key.Skill4Timer == 1) {
                                 kvp.Value.ATK += 3;
                                 kvp.Value.SPD += 3;
+                            } else if (kvp.Key.Skill5Timer == 1) {
+                                kvp.Value.SPD -= 5;
                             }
                             break;
                         case DeityEnum.Harvest:
-                        if (kvp.Key.Skill3Timer != 0) {
+                        if (kvp.Key.Skill3Timer == 1) {
                             kvp.Key.MaxHealth -= GrowthAmount;
                             kvp.Key.Health -= GrowthAmount;
-                        } else if (kvp.Key.Skill4Timer != 0) {
+                        } else if (kvp.Key.Skill4Timer == 1) {
                             kvp.Value.SPD += 3;
                             kvp.Value.INT += 3;
                         }
                             break;
                         case DeityEnum.End:
-                            if (kvp.Key.Skill1Timer !=0) {
+                            if (kvp.Key.Skill1Timer == 1) {
                                 kvp.Key.SPD -= 3;
                                 kvp.Key.LCK -= 3;
-                            } else if (kvp.Key.Skill4Timer != 0) {
+                            } else if (kvp.Key.Skill4Timer == 1) {
                                 kvp.Value.ATK += 4;
                                 kvp.Key.ATK -= 4;
                             }
@@ -1188,34 +1248,6 @@ public class RoomGenerator {
                     }
                 }
             }
-            }
-        
-            Divider();
-            player.WriteStats();
-            Console.WriteLine();
-            Divider();
-            switch (GetChoice(0, 0, "Attack", "Inventory", "Show Enemy", "Flee")) {
-                case 1:
-                    Console.Clear();
-                    StayTurn = Attack(enemy);
-                    break;
-                case 2:
-                    Console.Clear();
-                    BattleInventory();
-                    StayTurn = true;
-                    break;
-                case 3:
-                    PrintEnemy(enemy);
-                    StayTurn = true;
-                    break;
-                case 4:
-                    Console.Clear();
-                    Flee(enemy);
-                    IsOver = true;
-                    break;
-            }
-            Console.Clear();
-        } while(StayTurn);
     }
 
     public static bool Attack(Enemy enemy) {
@@ -1228,16 +1260,43 @@ public class RoomGenerator {
             player.UpdateStats();
             switch(player.Deity) {
                 case DeityEnum.Sacrifice:
-                    AttackList = [$"Blood Strike - Damage: {(((5+player.ATK)*2+player.MaxHealth*0.05)*0.5).ToString("0")}-{((5+player.ATK)*2+player.MaxHealth*0.05).ToString("0")} DMG, Cost: 5% Max Health", $"Life Drain - Damage: {player.ATK*0.8+(enemy.MaxHealth - enemy.Health)*0.25*0.5:0}-{(enemy.MaxHealth - enemy.Health)*0.25*2*1.5:0} DMG (Scales with Enemy Missing Health), Effect: Heal {(player.MaxHealth*0.1+(enemy.MaxHealth - enemy.Health)*0.25*0.45).ToString("0")} health", "Sacrificial Power - Effect: +3 ATK & +3 SPD", "Weaken Resolve - Effect: Enemy -6 DEF", $"Ultimate Sacrifice - Damage: {(enemy.MaxHealth*0.45*0.5).ToString("0")}-{(enemy.MaxHealth*0.45*1.5).ToString("0")} DMG, Cost: 25% Current Health, Effect: Heal {(enemy.MaxHealth*0.40*0.25).ToString("0")} health"];
+                    AttackList = 
+                    [
+                        $"Blood Strike - Damage: {((5+player.ATK)*1.8+player.MaxHealth*0.05):0} DMG, Cost: 10% Max Health", 
+                        $"Life Drain - Damage: {(player.ATK*0.8+(enemy.MaxHealth - enemy.Health)*0.25):0} DMG (Scales with Enemy Missing Health), Effect: Heal {(player.MaxHealth*0.1+(enemy.MaxHealth - enemy.Health)*0.25*0.45):0} health", 
+                        "Sacrificial Power - Effect: +3 ATK & +3 SPD", "Weaken Resolve - Effect: Enemy -6 DEF", 
+                        $"Ultimate Sacrifice - Damage: {ATK*0.6+enemy.MaxHealth*0.4:0} DMG, Cost: 25% Current Health, Effect: Heal {(MaxHealth*0.1+DMG*0.55):0} health"
+                    ];
                     break;
                 case DeityEnum.Enigma:
-                    AttackList = [$"Soul Track - Damage: {(player.INT*1.5*0.5).ToString("0")}-{(player.INT*1.5*1.5).ToString("0")} DMG", $"Shadowflame - Damage: {(player.INT*0.5*0.5).ToString("0")}-{(player.INT*0.5*1.5).ToString("0")} DMG 1-3 times", $"Mana Veil - Effect: +3 DEF & +3 SPD", $"Conjure Illusions - Effect: Enemy -3 ATK & -3 SPD", $"Dimensional Rift - Damage: {(player.INT*3*0.5).ToString("0")}-{(player.INT*3*1.5).ToString("0")} DMG, Effect: +5 SPD"];
+                    AttackList = 
+                    [
+                        $"Soul Track - Damage: {(player.INT*1.5):0} INT DMG", 
+                        $"Shadowflame - Damage: {(player.INT*0.7):0} INT DMG 1-3 times", 
+                        $"Mana Veil - Effect: +3 DEF & +3 SPD", 
+                        $"Conjure Illusions - Effect: Enemy -3 ATK & -3 SPD", 
+                        $"Dimensional Rift - Damage: {(player.INT*3):0} DMG, Effect: +5 SPD"
+                        ];
                     break;
                 case DeityEnum.Harvest:
-                    AttackList = [$"Thorned Wrath - Damage: {player.ATK*0.4+player.LCK*0.5} DMG, Effect: {player.LCK*0.04*100}% chance to heal {Math.Clamp(ATK*0.4+LCK*0.5*0.5, 0, player.MaxHealth).ToString("0")} Health", $"Lucky Punch - Damage: {(player.ATK*1.5*0.5).ToString("0")}-{(player.ATK*1.5+player.LCK*2*1.5).ToString("0")} DMG", $"Growth - Effect: Gain {(player.MaxHealth*0.2).ToString("0")} health for two turns", $"Wither - Effect: Enemy -3 SPD & -3 INT", $"Rooted Rampage - Damage: {(player.LCK*1.5).ToString("0")} DMG 3-6 times"];
+                    AttackList = 
+                    [
+                        $"Thorned Wrath - Damage: {(player.ATK*0.4+player.LCK*0.5):0} DMG, Effect: {player.LCK*0.04*100}% chance to heal {(DMG*RNG.NextDouble()*0.04):0} Health", 
+                        $"Lucky Punch - Damage: {(player.ATK*1.5+player.LCK*1.5):0} DMG", 
+                        $"Growth - Effect: Gain {(player.MaxHealth*0.25):0} health for two turns", 
+                        $"Wither - Effect: Enemy -3 SPD & -3 INT", 
+                        $"Rooted Rampage - Damage: {(player.LCK*1.5).ToString("0")} DMG 3-6 times"
+                        ];
                     break;
                 case DeityEnum.End:
-                    AttackList = [$"Soul Bleed - Damage: {player.ATK*0.7} DMG & {enemy.MaxHealth*0.06} DMG 0-3 times", $"Void Slash - Damage: {player.ATK*0.9} DMG 1-4 times", $"Shrouded Mist - Effect: +3 SPD & +3 LCK", $"Steal Strength - Effect: +4 ATK & Enemy -4 ATK", $"Annhilation - Damage: {player.ATK*0.5+player.ATK*0.2*(player.TotalKills+1)} DMG"];
+                    AttackList = 
+                    [
+                        $"Soul Bleed - Damage: {player.ATK*1.2:0} DMG & {enemy.MaxHealth*0.06:0} DMG 0-3 times", 
+                        $"Void Slash - Damage: {player.ATK*0.9:0} DMG 1-4 times", 
+                        $"Shrouded Mist - Effect: +3 SPD & +3 LCK", 
+                        $"Steal Strength - Effect: +4 ATK & Enemy -4 ATK", 
+                        $"Annhilation - Damage: {player.ATK*0.5+player.ATK*0.2*(player.TotalKills+1):0} DMG"
+                    ];
                     break;
             }
             AttackList.Add("Cancel");
@@ -1351,12 +1410,14 @@ public class RoomGenerator {
         return StayTurn;
     }
     public static void BattleInventory() {
-        foreach (KeyValuePair<int, string kvp in player.GetInventory())
-            Console.WriteLine(kvp.Value);
-        Consoel.ReadKey();
+        Dictionary<int, string> items = player.GetInventory();
+        for (var i = 0; i < items.Count; i++) {
+            Console.WriteLine(items[i].Value);
+        }
+        Console.ReadKey();
     }
     public static void Flee(Enemy enemy) {
-        player.Skill3Timer = player.Skill4Timer = enemy.Skill3Timer = enemy.Skill4Timer = 0;
+        player.Skill3Timer = player.Skill4Timer = enemy.Skill3Timer = enemy.Skill4Timer = enemy.SkillTimer5 = player.Skill5Timer = 0;
     }
 
     public static void PrintEnemy(Enemy enemy) {
@@ -2812,5 +2873,13 @@ static void Main() {
     RoomGen.InitializeRoom();
     RoomGen.DisplayRoom();
 }
+
+public static int NextInt(params dynamic[] n) {
+    Random RNG = new();
+    if (n.Length == 1)
+        return RNG.Next(n[0]);
+    else
+        return RNG.Next(n[0], n[1]);
+} 
 
 }
