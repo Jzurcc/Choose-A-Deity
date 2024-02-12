@@ -62,10 +62,12 @@ public class Enemy(int x, int y) : Entity {
         Armor = Math.Clamp(Math.Round(DEF*0.02), 0, 0.5);
         TotalKills = NextInt(0, LVL*3);
 
-        string[][] Names = [["Bloodbound Stalker", "Graveborn Revenant", "Painforged Emissary"], 
-                            ["Mind Walker", "Twilight Herald", "Dream Specter"], 
-                            ["Bleeding Orchardgeist", "Weeping Rosecutter", "Fiery Treant"], 
-                            ["Voidborn Wraith", "Oblivion Scourge", "Ancient Desolator"]];
+        string[][] Names = {
+            ["Bloodbound Stalker", "Graveborn Revenant", "Painforged Emissary"], 
+            ["Mind Walker", "Twilight Herald", "Dream Specter"], 
+            ["Bleeding Orchardgeist", "Weeping Rosecutter", "Fiery Treant"], 
+            ["Voidborn Wraith", "Oblivion Scourge", "Ancient Desolator"]
+            };
         string[] DeityNames = Enum.GetNames(typeof(DeityEnum));
 
         
@@ -119,6 +121,32 @@ public class Enemy(int x, int y) : Entity {
         }
         UpdateStats(true);
     }
+
+    public void UpdateAsBoss() {
+        LVL += NextInt(3, 6);
+        DistributePTS();
+        UpdateStats(true);
+         string[][] Names = [
+                [],
+                [],
+                [],
+                [],
+            ];
+        string[][] upgradedNames = new string[][]
+        {
+            ["Crimson Abyss Watcher", "Tombwraith Sovereign", "Agony's Last Herald"],
+            ["Mindshatter Enchanter", "Eclipse's Final Envoy", "Nightmare Incarnate"],
+            ["Thornheart Forest Monarch", "Mourning Bloom Sovereign", "Inferno's Rootbound Titan"],
+            ["Nethervoid Lich King", "Eternal Damnation's Harbinger", "Time's Final Arbiter"]
+        };
+        string[] DeityNames = Enum.GetNames(typeof(DeityEnum));
+        for (int i = 0; i < DeityNames.Length; i++)
+            if (Deity.ToString() == DeityNames[i])
+                Name = Names[i][NextInt(Names.Length-1)];
+
+
+    }
+
     public void DistributePTS() {
         while (PTS > 0) {
             double chance = RNG.NextDouble();
@@ -139,6 +167,7 @@ public class Enemy(int x, int y) : Entity {
         UpdateStats(true);
     }
     public void Defeat() {
+        player.RoomKills++;
         player.TotalKills++;
         player.EXP += EXP;
         player.EvaluateEXP();
@@ -179,14 +208,13 @@ public class Entity {
     public ConsoleColor color;
     // Attribute variables
     public string Name, DeityName;
-    public dynamic Skill1, Skill2, Skill3, Skill4, Skill5;
     public int Skill1Timer, Skill2Timer, Skill3Timer, Skill4Timer, Skill5Timer;
     public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, MaxEXP, LVL, PTS, IntHealth, IntMaxHealth, ATKM;
     public double Health, MaxHealth, DMG, Armor, FinalDMG;
     public dynamic ChosenDeity;
     // Room variables
     public int X, Y, Stage;
-    public int TotalKills, SacrificeKills, EnigmaKills, HarvestKills, EndKills;
+    public int TotalKills, SacrificeKills, EnigmaKills, HarvestKills, EndKills, RoomKills;
     public int spawnX = NextInt(1, 20), spawnY = NextInt(1, 26);
     public Dictionary<int, string> inventoryDict;
     public Entity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string Name = "???") {
@@ -225,11 +253,6 @@ public class Entity {
         this.ATKM = ATK*3/4;
         this.Armor = Math.Clamp(Math.Round(DEF*0.02), 0, 0.5);
         // Skill variables
-        this.Skill1 = "";
-        this.Skill2 = "";
-        this.Skill3 = "";
-        this.Skill4 = "";
-        this.Skill5 = "";
         this.Skill1Timer = 0;
         this.Skill2Timer = 0;
         this.Skill3Timer = 0;
@@ -386,6 +409,7 @@ public class Entity {
 
     public void UpdateStats(bool updateHealth = false) {
         MaxEXP = 80 + LVL*20;
+        PTS = 10 + LVL*2;
         MaxHealth = 20 + HP*8;
         Armor = Math.Clamp(Math.Round(DEF*0.02), 0, 0.5);
         ATKM = ATK*3/4;
@@ -538,12 +562,19 @@ public class Entity {
     }
     public void DimensionalRift(dynamic enemy) {
         Narrate($"{Name} used Dimensional Rift!");
-        SPD += 5;
+        string str = "";
+        if (Skill5Timer == 0) {
+            SPD += 5;
+            str = $" and {Name} gained +5 SPD for two turns";
+        } else {
+            Narrate($"This skill is already in play!");
+            Narrate($"Effect will last for two more turns!");
+        }
         DMG = GetDMG(INT*3, enemy);
         Skill5Timer = 3;
         
         if (CheckEvade(DMG, enemy)) 
-            Narrate($"{enemy.Name} got hit for {DMG} DMG and {Name} gained +5 SPD for two turns!");
+            Narrate($"{enemy.Name} got hit for {DMG} DMG{str}!");
     }
     // Harvest Skills
     public void ThornedWrath(dynamic enemy) {
@@ -891,7 +922,7 @@ public class RoomGenerator {
             // Initializes enemies and walls that scale with inner room area
             InitializeWalls((xSize-2)*(ySize-2)/6);
             InitializeEnemies(15+(xSize-2)*(ySize-2)/70); 
-            InitializeItems(NextInt(10+(player.Stage*2), 20+(player.Stage*2)), NextInt(5, 10));
+            InitializeItems(NextInt(5+player.Stage, 10+player.Stage), NextInt(5+player.Stage, 10+player.Stage));
             // Randomizes and teleports player to random spawnpoint.
             player.spawnX = NextInt(1, 20);
             player.spawnY = NextInt(1, 26);
@@ -991,14 +1022,14 @@ public class RoomGenerator {
                     else
                         HealAmount = 0;
                     Console.WriteLine();
-                    player.Narrate($"You found a Healing Potion! Restored {HealAmount} health.");
+                    player.Narrate($"Restored {HealAmount} health.", 5, 50);
                     Room[player.X, player.Y] = new Tile(TileType.Empty);
                     break;
                 case TileType.Gold:
                     int GoldAmount = NextInt(5, Convert.ToInt32(player.LCK*5/2)-15);
                     player.GLD += GoldAmount;
                     Console.WriteLine();
-                    player.Narrate($"You found Gold! Gained {GoldAmount} gold.");
+                    player.Narrate($"Gained {GoldAmount} gold.", 5, 50);
                     Room[player.X, player.Y] = new Tile(TileType.Empty);
                     break;
             }
@@ -1006,15 +1037,20 @@ public class RoomGenerator {
             // Checks if player encounters enemy
             foreach (Enemy enemy in enemies)
                 if (player.X == enemy.X && player.Y == enemy.Y) 
-                    Encounter(player, enemy);
+                    if (player.RoomKills == 4) {
+                        enemy.UpdateAsBoss();
+                        Encounter(player, enemy);
+                    } else
+                        Encounter(player, enemy);
         }
     }
     public void UsePortal() {
+        player.RoomKills = 0;
         Console.Clear();
-        player.Narrate("You entered the portal.");
-        for (var i = 0; i < 3; i++) {
-            Console.Write(". ");
-            Sleep(450);
+        player.Narrate("[You entered the portal.]");
+        for (var i = 0; i < 4; i++) {
+                Console.Write(". ");
+                Sleep(300);
         }
 
         xSize = NextInt(25, 35);
@@ -1189,9 +1225,11 @@ public class RoomGenerator {
                         if (0.5+player.LCK*0.01 > RNG.NextDouble()) {
                             player.Skill3Timer = player.Skill4Timer = enemy.Skill3Timer = enemy.Skill4Timer = enemy.Skill5Timer = player.Skill5Timer = 0;
                             IsOver = true;
+                            player.Narrate("You successfully fled from battle!");
                             EvaluateTimers(enemy);
+                            Console.ReadKey();
                         } else {
-                            player.Narrate("Your attempt failed.");
+                            player.Narrate("You failed to flee.");
                         }
                         break;
                 }
@@ -2720,6 +2758,7 @@ public class RoomGenerator {
                             Console.WriteLine("Invalid input. Try again.");
                             break;
                     }
+                    Console.Clear();
                 }
             }   
             Console.WriteLine();
@@ -2837,31 +2876,40 @@ static void Main() {
         int choice = GetChoice(1, 0, "Blood-Horned Door", "Twin-Mask Door", "Thorn-Blooming Door", "Ankh-Ornated Door", "Simple Door");
         player.Think("I approached the door.");
         if (choice == 1) {
-            player.Narrate("The door stood tall and imposing, adorned with twisted horns portruding from every corner, their tips stained crimson with the blood of the unfortunate, each curve and jagged edge instills a primal fear in those who dare approach.");
+            player.Narrate("The door stood tall and imposing, adorned with twisted horns portruding from every corner.");
+            player.Narrate("their tips stained crimson with the blood of the unfortunate");
+            player.Narrate("Each curve and jagged edge instills a primal fear in those who dare approach.");
             player.Think("The plaque below the statue reads... \"protection for a price.\"");
                 player.ChooseDeity(DeityEnum.Sacrifice); // Turns false when the player enters the door.
                 if (!flag)
                     SacrificeRoute();
         } else if (choice == 2) {
-            player.Narrate("The door stood tall and magical, adorned with twin masks, one serene and the other solemn, their intricate designs pulsating with an otherworldly glow, while delicate tendrils of shimmering mist curled around the edges, obscuring the threshold in a veil of enchantment, hinting at the mysteries that lie beyond.");
+            player.Narrate("The door stood tall and magical, adorned with twin masks, one serene and the other solemn.");
+            player.Narrate("their intricate designs pulsating with an otherworldly glow, while delicate tendrils of shimmering mist curled around the edges.");
             player.Think("The plaque below the statue reads... \"Seek forbidden knowledge.\"");
             flag = player.ChooseDeity(DeityEnum.Enigma);
             if (!flag)
                 EnigmaRoute();
         } else if (choice == 3) {
-            player.Narrate("The door stood tall and weathered, adorned with gnarled vines that twisted and coiled around its frame, their thorns glistening with a malevolent gleam as if hungry for the touch of unwary hands, while a faint aroma of fresh earth and ripened fruit wafted from the intricate carvings depicting fields of golden grain and lush orchards thriving beneath the shadow of a towering treant, its branches outstretched in a gesture of both protection and expectation.");
+            player.Narrate("The door stood tall and weathered, adorned with gnarled vines that twisted and coiled around its frame.");
+            player.Narrate("Their thorns glistening with a malevolent gleam as if hungry for the touch of unwary hands.");
+            player.Narrate("Meanwhile, a faint aroma of fresh earth and ripened fruit wafted from the intricate carvings depicting fields of golden grain.");
+            player.Narrate("Its branches outstretched in a gesture of both protection and expectation.");
             player.Think("The plaque below the statue reads... \"A bounty for the patient.\"");
             flag = player.ChooseDeity(DeityEnum.Harvest);
             if (!flag)
                 HarvestRoute();
         } else if (choice == 4) {
-            player.Narrate("The door loomed ominously, its obsidian surface engulfed in swirling crimson tendrils, each etching of the ankh symbol, a silent promise of finality and inevitability, a gateway to the abyssal realm of shadows where every step may lead to the precipice of final embrace.");
+            player.Narrate("The door loomed ominously, its obsidian surface engulfed in swirling crimson tendrils.");
+            player.Narrate("Each etching of the ankh symbol, a silent promise of finality and inevitability.");
+            player.Narrate("A gateway to the abyssal realm of shadows where every step may lead to the precipice of final embrace.");
             player.Think("The plaque below the statue reads... \"Find solace in the inevitable.\"");
             flag = player.ChooseDeity(DeityEnum.End);
             if (!flag)
                 EndRoute();
         } else if (choice == 5) {
-            player.Narrate("There is no statue of a deity here. Only a simple door with no decoration remains.");
+            player.Narrate("There is no statue of a deity here.");
+            player.Narrate("Only a simple door with no decoration can be seen.");
             flag = player.ChooseDeity(DeityEnum.None);
             if (!flag)
                 DeitylessRoute();
