@@ -143,7 +143,7 @@ public class Enemy(int x, int y) : Entity {
         player.EXP += EXP;
         player.EvaluateEXP();
         IsDefeated = true;
-        player.Skill3Timer = player.Skill4Timer = enemy.Skill3Timer = enemy.Skill4Timer = enemy.SkillTimer5 = player.Skill5Timer = 0;
+        player.Skill3Timer = player.Skill4Timer = Skill3Timer = Skill4Timer = Skill5Timer = player.Skill5Timer = 0;
     }
 
     // Method to randomly move the enemy
@@ -1036,7 +1036,7 @@ public class RoomGenerator {
         do {
             Timers.Clear();
             Timers = [player.Skill3Timer, player.Skill4Timer, player.Skill5Timer, enemy.Skill3Timer, enemy.Skill4Timer, enemy.Skill5Timer];
-            for (int i = 0; i < Timers.Length; i++) {
+            for (int i = 0; i < Timers.Count; i++) {
                 if (Timers[i] > 0)
                     Timers[i]--;
             }
@@ -1185,12 +1185,13 @@ public class RoomGenerator {
                         break;
                     case 4:
                         Console.Clear();
-                        Narrate("You attempted to flee.");
+                        player.Narrate("You attempted to flee.");
                         if (0.5+player.LCK*0.01 > RNG.NextDouble()) {
-                            Flee(enemy);
+                            player.Skill3Timer = player.Skill4Timer = enemy.Skill3Timer = enemy.Skill4Timer = enemy.Skill5Timer = player.Skill5Timer = 0;
                             IsOver = true;
+                            EvaluateTimers(enemy);
                         } else {
-                            Narrate("Your attempt failed.");
+                            player.Narrate("Your attempt failed.");
                         }
                         break;
                 }
@@ -1199,7 +1200,7 @@ public class RoomGenerator {
         } while(StayTurn);
     }
 
-    public static EvaluateTimers(Enemy enemy) {
+    public static void EvaluateTimers(Enemy enemy) {
         foreach (KeyValuePair<dynamic, dynamic> kvp in new Dictionary<dynamic, dynamic>(){{player, enemy}, {enemy, player}}) {
                 if (kvp.Key.Skill3Timer != 0 || kvp.Key.Skill4Timer != 0 || kvp.Key.Skill5Timer != 0) {
                     kvp.Key.Skill3Timer--;
@@ -1265,7 +1266,7 @@ public class RoomGenerator {
                         $"Blood Strike - Damage: {((5+player.ATK)*1.8+player.MaxHealth*0.05):0} DMG, Cost: 10% Max Health", 
                         $"Life Drain - Damage: {(player.ATK*0.8+(enemy.MaxHealth - enemy.Health)*0.25):0} DMG (Scales with Enemy Missing Health), Effect: Heal {(player.MaxHealth*0.1+(enemy.MaxHealth - enemy.Health)*0.25*0.45):0} health", 
                         "Sacrificial Power - Effect: +3 ATK & +3 SPD", "Weaken Resolve - Effect: Enemy -6 DEF", 
-                        $"Ultimate Sacrifice - Damage: {ATK*0.6+enemy.MaxHealth*0.4:0} DMG, Cost: 25% Current Health, Effect: Heal {(MaxHealth*0.1+DMG*0.55):0} health"
+                        $"Ultimate Sacrifice - Damage: {player.ATK*0.6+enemy.MaxHealth*0.4:0} DMG, Cost: 25% Current Health, Effect: Heal {((player.ATK*0.6+enemy.MaxHealth*0.4)*0.55):0} health"
                     ];
                     break;
                 case DeityEnum.Enigma:
@@ -1281,7 +1282,7 @@ public class RoomGenerator {
                 case DeityEnum.Harvest:
                     AttackList = 
                     [
-                        $"Thorned Wrath - Damage: {(player.ATK*0.4+player.LCK*0.5):0} DMG, Effect: {player.LCK*0.04*100}% chance to heal {(DMG*RNG.NextDouble()*0.04):0} Health", 
+                        $"Thorned Wrath - Damage: {(player.ATK*0.4+player.LCK*0.5):0} DMG, Effect: {player.LCK*0.04*100}% chance to heal {(player.ATK*0.4+player.LCK*0.5*0.5):0} Health", 
                         $"Lucky Punch - Damage: {(player.ATK*1.5+player.LCK*1.5):0} DMG", 
                         $"Growth - Effect: Gain {(player.MaxHealth*0.25):0} health for two turns", 
                         $"Wither - Effect: Enemy -3 SPD & -3 INT", 
@@ -1411,13 +1412,14 @@ public class RoomGenerator {
     }
     public static void BattleInventory() {
         Dictionary<int, string> items = player.GetInventory();
-        for (var i = 0; i < items.Count; i++) {
-            Console.WriteLine(items[i].Value);
+        for (int i = 0; i < items.Count; i++) {
+            try {
+                Console.WriteLine($"{i+1}. {items[i]}");
+            } catch {
+                Console.WriteLine($"{i+1}. Empty");
+            }
         }
         Console.ReadKey();
-    }
-    public static void Flee(Enemy enemy) {
-        player.Skill3Timer = player.Skill4Timer = enemy.Skill3Timer = enemy.Skill4Timer = enemy.SkillTimer5 = player.Skill5Timer = 0;
     }
 
     public static void PrintEnemy(Enemy enemy) {
