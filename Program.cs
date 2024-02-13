@@ -1,7 +1,5 @@
 ﻿using static System.Threading.Thread;
 
-
-
 public class Program {
 // Deity Dialogue variables
 public static Entity player = new(10, 750, ConsoleColor.White, "Player");
@@ -107,7 +105,8 @@ public static void SacrificeRoute() {
     Console.WriteLine();
     player.Narrate("You chose Sacrifice as your Deity.");
     player.Narrate("Experience the worst to become the best.");
-    player.Narrate("\nEffects: ++ HP, + DEF, - GLD, - ATK, - SPD");
+    Console.WriteLine();
+    player.Narrate("Effects: ++ HP, + DEF, - GLD, - ATK, - SPD");
     player.Narrate("Sacrificial Dagger was added to your inventory.");
     Console.WriteLine("\nPress any key to continue...");
     Console.ReadKey();
@@ -139,7 +138,8 @@ public static void EnigmaRoute() {
     Console.WriteLine();
     player.Narrate("You chose The Enigma as your Deity.");
     player.Narrate("To know the unknown, to see the unseen.");
-    player.Narrate("\nEffects: ++ INT, + PTS, -- ATK, - HP");
+    Console.WriteLine();
+    player.Narrate("Effects: ++ INT, + PTS, -- ATK, - HP");
     player.Narrate("Dark Prism was added to your inventory.");
     Console.WriteLine("\nPress any key to continue...");
     Console.ReadKey();
@@ -180,7 +180,8 @@ public static void HarvestRoute() {
     Harvest.Talk("Stray from darkness, and you shall live to see the end of time.");
     Console.WriteLine();
     player.Narrate("You chose Harvest as your deity.");
-    player.Narrate("\nEffects: ++ LCK, + PTS, -- SPD, - DEF");
+    Console.WriteLine();
+    player.Narrate("Effects: ++ LCK, + PTS, -- SPD, - DEF");
     player.inventory.Add("Eternal Hourglass");
     player.Narrate("Eternal Hourglass was added to your inventory.");
     Console.WriteLine("\nPress any key to continue...");
@@ -214,7 +215,8 @@ public static void EndRoute() {
     Console.WriteLine();
     player.Narrate("You chose End as your deity.");
     player.Narrate("To seek him is to accept the inescapable truth of all things.");
-    player.Narrate("\nEffects: ++ ATK, + SPD, -- DEF, - HP");
+    Console.WriteLine();
+    player.Narrate("Effects: ++ ATK, + SPD, -- DEF, - HP");
     player.inventory.Add("Void Cloak");
     player.Narrate("Void Cloak was added to your inventory.");
     player.ATK += 5;
@@ -456,6 +458,7 @@ public class Entity {
                                                                                                                                       ");
         Console.ForegroundColor = ConsoleColor.White;
         Print(DeathMSG);
+        Console.ReadKey();
         Print("\nDo you wish to play again?");
         int input = GetChoice(0, 0, "Yes", "No");
         if (input == 1)
@@ -492,6 +495,10 @@ public class Entity {
         FinalDMG = NextInt(MinDMG, MaxDMG);
         if (!PierceArmor)
             FinalDMG -= FinalDMG*enemy.Armor;
+        if (enemy is Enemy) {
+            Console.Write($"FinalDMG: {FinalDMG}, EnemyDMG: {FinalDMG*0.6}");
+            FinalDMG *= 0.6;
+        }
         return FinalDMG;
     }
 
@@ -523,7 +530,7 @@ public class Entity {
     }
     // Deals a percentage of the user's missing health to the enemy.
     public void LifeDrain(dynamic enemy) {
-        DMG = GetDMG(ATK*0.8+(enemy.MaxHealth - enemy.Health)*0.25, enemy);
+        DMG = GetDMG(ATK*0.8+(MaxHealth - Health)*0.25, enemy);
         Health += MaxHealth*0.1+DMG*0.45;
         Narrate($"{Name} used Life Drain!");
         if (CheckEvade(DMG, enemy)) {
@@ -562,7 +569,7 @@ public class Entity {
     // Significantly reduces health but deals a significant percentage of it to the enemy.
     public void UltimateSacrifice(dynamic enemy) {
         Narrate($"{Name} used Ultimate Sacrifice!");
-        DMG = GetDMG(ATK*0.6+enemy.MaxHealth*0.4, enemy);
+        DMG = GetDMG(ATK*1.7+enemy.MaxHealth*0.4, enemy);
         Health -= Health*0.25 - DEF*0.5;
         Health += MaxHealth*0.1+DMG*0.55;
         if (CheckEvade(DMG, enemy)) {
@@ -874,12 +881,14 @@ public class Enemy(int x, int y) : Entity {
         UpdateStats(true);
     }
     public void Defeat() {
-        int HealAmount = player.MaxHealth*0.2;
+        double HealAmount = player.MaxHealth*0.2;
         if (player.Health + HealAmount <= player.MaxHealth)
             player.Health += HealAmount;
-        else
+        else {
             HealAmount -= player.Health + HealAmount - player.MaxHealth;
-        player.Health = HealAmount;
+            player.Health += HealAmount;
+        }
+        
         Print($"Regenerated {HealAmount} health!");
         Sleep(800);
         player.RoomKills++;
@@ -1041,11 +1050,13 @@ public class RoomGenerator {
                     UsePortal();
                     break;
                 case TileType.HealingPotion:
-                    int HealAmount = NextInt(Convert.ToInt32(player.IntMaxHealth/3), Convert.ToInt32(player.IntMaxHealth/3*1.3)); // Determine the healing amount
+                    double HealAmount = NextInt(Convert.ToInt32(player.IntMaxHealth/3), Convert.ToInt32(player.IntMaxHealth/3*1.3)); // Determine the healing amount
                     if (player.Health + HealAmount <= player.MaxHealth)
                         player.Health += HealAmount;
-                    else
+                    else {
                         HealAmount -= player.Health + HealAmount - player.MaxHealth;
+                        player.Health += HealAmount;
+                    }
                     Console.WriteLine();
                     player.Narrate($"Restored {HealAmount} health.", 5, 50);
                     Room[player.X, player.Y] = new Tile(TileType.Empty);
@@ -1145,30 +1156,32 @@ public class RoomGenerator {
 
     public static void EnemyTurn(Enemy enemy) {
         if(!IsOver) CheckHealth(enemy);
-        Divider();
-        enemy.WriteStats();
-        Console.WriteLine();
-        Divider();
-        // Chooses a random skill based on the enemy's deity. The percentage of which skill to use is specific for each deity.
-        double ChosenSkill = RNG.NextDouble();
-        switch (enemy.Deity) {
-            case DeityEnum.Sacrifice:
-                SacrificeSkills(ChosenSkill, enemy);
-                break;
-            case DeityEnum.Enigma:
-                EnigmaSkills(ChosenSkill, enemy);
-                break;
-            case DeityEnum.Harvest:
-                HarvestSkills(ChosenSkill, enemy);
-                break;
-            case DeityEnum.End:
-                EndSkills(ChosenSkill, enemy);
-                break;
+        if (!IsOver) {
+            Divider();
+            enemy.WriteStats();
+            Console.WriteLine();
+            Divider();
+            // Chooses a random skill based on the enemy's deity. The percentage of which skill to use is specific for each deity.
+            double ChosenSkill = RNG.NextDouble();
+            switch (enemy.Deity) {
+                case DeityEnum.Sacrifice:
+                    SacrificeSkills(ChosenSkill, enemy);
+                    break;
+                case DeityEnum.Enigma:
+                    EnigmaSkills(ChosenSkill, enemy);
+                    break;
+                case DeityEnum.Harvest:
+                    HarvestSkills(ChosenSkill, enemy);
+                    break;
+                case DeityEnum.End:
+                    EndSkills(ChosenSkill, enemy);
+                    break;
+            }
+            if(!IsOver) CheckHealth(enemy);
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            Console.Clear();
         }
-        if(!IsOver) CheckHealth(enemy);
-        Console.WriteLine("Press any key to continue...");
-        Console.ReadKey();
-        Console.Clear();
     }
 
     public static void SacrificeSkills(double ChosenSkill, Enemy enemy) {
@@ -1322,11 +1335,11 @@ public class RoomGenerator {
                 case DeityEnum.Sacrifice:
                     AttackDescriptions = 
                     [
-                        $"Blood Strike\n     Damage: {((5+player.ATK)*1.8+player.MaxHealth*0.05):0} DMG\n     Cost: 10% Max Health\n", 
-                        $"Life Drain\n     Damage: {(player.ATK*0.8+(enemy.MaxHealth - enemy.Health)*0.25):0} DMG (Scales with Enemy Missing Health)\n     Effect: Heal {(player.MaxHealth*0.1+(enemy.MaxHealth - enemy.Health)*0.25*0.45):0} health\n", 
+                        $"Blood Strike\n     Damage: {((5+player.ATK)*1.8+player.MaxHealth*0.05):0} DMG\n     Cost: {player.MaxHealth*0.1} Health\n", 
+                        $"Life Drain\n     Damage: {(player.ATK*0.8+(player.MaxHealth - player.Health)*0.25):0} DMG (Scales with Enemy Missing Health)\n     Effect: Heal {(player.MaxHealth*0.1+(player.MaxHealth - player.Health)*0.25*0.45):0} health\n", 
                         "Sacrificial Power\n     Effect: +3 ATK & +3 SPD\n", 
                         "Weaken Resolve\n     Effect: Enemy -6 DEF\n", 
-                        $"Ultimate Sacrifice\n     Damage: {player.ATK*0.6+enemy.MaxHealth*0.4:0} DMG\n     Cost: 25% Current Health\n     Effect: Heal {((player.ATK*0.6+enemy.MaxHealth*0.4)*0.55):0} health\n"
+                        $"Ultimate Sacrifice\n     Damage: {player.ATK*0.6+enemy.MaxHealth*0.4:0} DMG\n     Cost: {player.Health*0.25} Health\n     Effect: Heal {((player.ATK*0.6+enemy.MaxHealth*0.4)*0.55):0} health\n"
                     ];
                     break;
                 case DeityEnum.Enigma:
@@ -3041,6 +3054,7 @@ public static Dictionary<int, string> Interface = [];
 // Combat global variables
 public static bool IsOver = false;
 public static int Turn = 0;
+
 public class Deity(int tspeed = 35, int tduration = 450, ConsoleColor color = ConsoleColor.White, string Name = "???") {
     public int tspeed = tspeed, tduration = tduration;
     public ConsoleColor color = color;
