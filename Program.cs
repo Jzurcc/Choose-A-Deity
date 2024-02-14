@@ -163,7 +163,7 @@ public static void HarvestRoute() {
     player.Think("A figure appeared.");
     Harvest.Talk("State your purpose or die by my hands.");
     player.Think("Instinctively, I got down on my knees.");
-    player.Talk("Guidance.");
+    player.Talk("I... I seek guidance.");
     Sleep(500);
     Harvest.Talk("And why would I heed to you?");
     player.Talk("...");
