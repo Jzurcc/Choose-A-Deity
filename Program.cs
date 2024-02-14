@@ -2,11 +2,11 @@
 
 public class Program {
 // Deity Dialogue variables
-public static Entity player = new(15, 750, ConsoleColor.White, "Player");
-public static Deity Sacrifice = new(25, 750, ConsoleColor.DarkRed, "SACRIFICE"); // Warrior equivalent
-public static Deity Enigma = new(30, 750, ConsoleColor.DarkMagenta, "ENIGMA"); // Mage equivalent
-public static Deity Harvest = new(40, 800, ConsoleColor.DarkGreen, "HARVEST"); // Archer equivalent
-public static Deity End = new(28, 1100, ConsoleColor.Black, "END"); // Assassin equivalent
+public static Entity player = new(15, 550, ConsoleColor.White, "Player");
+public static Deity Sacrifice = new(25, 550, ConsoleColor.DarkRed, "SACRIFICE"); // Warrior equivalent
+public static Deity Enigma = new(13, 550, ConsoleColor.DarkMagenta, "ENIGMA"); // Mage equivalent
+public static Deity Harvest = new(40, 650, ConsoleColor.DarkGreen, "HARVEST"); // Archer equivalent
+public static Deity End = new(28, 750, ConsoleColor.Black, "END"); // Assassin equivalent
 public static Deity Chaos = new(45, 700, ConsoleColor.White, "CHAOS"); // Hidden class
 // The rest of the global variables are at the end.
 static void Main() {
@@ -97,11 +97,12 @@ public static void SacrificeRoute() {
     Sacrifice.Talk("BWAHAHAHAHAHA!");
     player.Think("A monstrous horned-figure wearing devilish armor emerged...");
     Sacrifice.Name = "SACRIFICE";
-    Sacrifice.Talk("BLEED FOR YOUR MASTER!");
-    player.Talk("...What are you?");
+    Sacrifice.Talk("THERE'S NOTHING YOU CAN DO!");
+    player.Talk("...What?");
     Sacrifice.Talk("MASTER OF BLOOD AND BLADE, DEITY OF THE ENDLESS FRAY!");
-    Sacrifice.Talk("I AM SACRIFICE, AND I SHALL BESTOW UPON YOU GLORY AND DOMINATION!");
+    Sacrifice.Talk("IT IS I! SACRIFICE! AND I SHALL BESTOW UPON YOU GLORY AND DOMINATION!");
     Sacrifice.Talk("DRINK MY BURNING BLOOD, SHOULD YOU WISH TO DEFY DEATH HERSELF!");
+    player.Talk("Ha?");
     Console.WriteLine();
     player.Narrate("You chose Sacrifice as your Deity.");
     player.Narrate("Experience the worst to become the best.");
@@ -128,13 +129,24 @@ public static void EnigmaRoute() {
     Sleep(300);
     player.Think("A voice, both near and far, weaved through the silence.");
     Sleep(300);
-    Enigma.Talk("Ah, seeker of truths untold...");
-    Sleep(300);
-    Enigma.Talk("In the labyrinth of the mind, do you find what you truly seek?");
-    Enigma.Talk("Before me, the shadows coalesce into a figure robed in twilight, their eyes yearning for unseen knowledge.");
+    Enigma.Talk("Ah, seeker of truths veiled by the cosmos, thou hast traversed vast expanses in thy quest. The journey is arduous, yet thy resolve wavers not. What hidden wisdom dost thou seek in the embrace of the abyss?");
+    player.Narrate("Translation: Looking for secrets?");
+    player.Talk("Uh...", 15, 5);
+    Enigma.Talk("In the cerebral maze that is thy mind, dost thou grasp the essence of thy quest? It is a path fraught with enigmas, each turn more perplexing than the last. Do the answers you seek lie buried within, or do they dance just beyond thy reach?");
+    player.Narrate("Translation: Do you still seek answers?");
+    player.Talk("I-", 15, 0);
+    Enigma.Talk("Before thee, shadows merge into an entity garbed in the penumbra, their organs of sight craving knowledge cloaked in twilight. Naught but a silhouette, painted against the canvas of the eternal night, yearning for the secrets that elude even the stars. Behold, as the darkness and light intertwine, I will reveal what you so desire to discover.");
+    player.Narrate("Translation: You look like you want to know something.");
     Enigma.Name = "ENIGMA";
-    Enigma.Talk("Fear not, for I am Enigma, The Voice in the Whispering Abyss, The Deity of Unfathomable Secrets.");
-    Enigma.Talk("Lend your eyes to me, should you seek to unravel the fabric of reality itself.");
+    player.Talk("I think I'm-", 15, 0);
+    Enigma.Talk("Tremble not. For I am Enigma, The Voice in the Whispering Abyss, The Deity of Arcane Mysteries. My voice is the harbinger of truths untold, a beacon for those who dare to question. With my guidance, illumination shall dawn the path through the unknown.");
+    player.Narrate("Translation: I know a lot.");
+    Enigma.Talk("Entrust thine vision unto me, shouldst thou yearn to dissect the very weave of existence. Together, we shall peel back the layers of reality, revealing the core of all mysteries. Let thine eyes be mine, and together, we shall gaze into the infinite. Behold, as the veil of reality trembles at the mere whisper of my voice, a sonorous echo that resonates through the ether, transcending the bounds of time and space. Here, in the interstice of existence and oblivion, where shadows and light perform their eternal dance, I stand sentinel over secrets that the cosmos itself dares not reveal. Let us embark upon a journey, you and I, across the tapestry of creation, unraveling the threads of destiny, peering into the heart of the abyss, and discovering the truths that lie hidden beneath layers of mystery and illusion. For in the pursuit of the unfathomable, in the quest to divine the undivinable, lies the essence of all wisdom, a treasure beyond measure, waiting for the bold to claim it. Fear not the journey, nor the destination, for with me as your guide, the path shall reveal wonders untold, and in the end, when the final truth is laid bare, you will find that all paths, all truths, converge upon me, Enigma, the keeper of secrets, the whisper in the silence, the light in the darkness, and the darkness within the light. Contemplate, if you will, the vast expanse of the cosmos, an infinite canvas painted with the strokes of creation and destruction, where celestial bodies dance to the ancient rhythms of existence. It is here, amidst the interstellar void and the primordial chaos, that my voice, a mere susurration against the backdrop of eternity, weaves the narrative of reality, a story untold across aeons and galaxies. Within this boundless arena, where time itself bends in humble acquiescence to the will of the unseen forces, I stand as both observer and orchestrator, guardian of the secrets that underpin the very fabric of the universe. Let us, you of mortal coil and I of ethereal essence, journey together beyond the veil of the tangible, through realms unfathomed and dimensions unexplored, in search of the arcane knowledge that eludes even the most enlightened of beings. As we traverse this cosmic labyrinth, every revelation, every epiphany, will serve as a beacon, illuminating our path through the enigmatic darkness that shrouds the ultimate truth. And yet, as we delve deeper into the mysteries that pervade all of creation, as we unravel the enigmas that have perplexed scholars and sages throughout the ages, we will find that the journey itself is the destination. For in seeking the unknowable, in yearning to comprehend the incomprehensible, we embark upon a quest that transcends the physical, a voyage that will challenge the very limits of your understanding and redefine the essence of your being. Fear not the depths into which we shall dive, for I, Enigma, The Voice in the Whispering Abyss, The Deity of Unfathomable Secrets, shall be your guide, your compass, and your lantern. Together, we shall explore the infinite, confront the impossible, and perhaps, in those fleeting moments of sublime revelation, grasp the ineffable nature of existence itself. For it is within the profound silence of the void, in the space between thoughts and consciousness, that the true nature of all things is revealed. Thus, armed with the courage to face the unknown and the resolve to seek beyond the boundaries of perception, let us set forth on this unparalleled journey, where every step brings us closer to the heart of the cosmos, and every breath is a testament to the indomitable spirit of inquiry. And remember, when the final veil is lifted and the last mystery unraveled, it is there, in the serene and solemn quietude, that you will find me, Enigma, the eternal guardian of secrets, waiting at the end of all things, where all paths converge, and all truths find their echo.");
+    player.Narrate("Translation: I'm not translating that shit.");
+    Enigma.Talk("Didst thou apprehend the entirety of my discourse? An encore awaits thy beckon, shouldst thou desire.");
+    player.Narrate("Translation: Got all that? I can repeat everything if you want.");
+    player.Talk("No thanks.");
+    player.Think("This guy sure loves to talk.");
     Console.WriteLine();
     player.Narrate("You chose The Enigma as your Deity.");
     player.Narrate("To know the unknown, to see the unseen.");
@@ -321,7 +333,7 @@ public class Entity {
     }
 
     // Methods
-    public void Talk(string str) {
+    public void Talk(string str, int tspeed = 15, int tduration = 250, ConsoleColor color = ConsoleColor.White, string Name = "Player") {
         Program.Print(str, tspeed, tduration, color, Name);
     }
 
@@ -367,7 +379,7 @@ public class Entity {
     public Dictionary<int, string> GetStats() {
         Dictionary<int, string> StatsDict = [];
         StatsDict.Add(1, "   --------------------------------------------");
-        List<string> strings = [string.Format("   Level: {0, -13} Gold: {1}", LVL, GLD), string.Format("   Health: {0}/{1, -8} EXP: {2}/{3}", Health, MaxHealth, EXP, MaxEXP), string.Format("   Points: {0, -13} Deity: {1}", PTS, DeityName), "   --------------------------------------------", string.Format("   HP: {0, -16} DEF: {1}", HP, DEF), string.Format("   ATK: {0, -15} INT: {1}", ATK, INT), string.Format("   SPD: {0, -15} LCK: {1}", SPD, LCK), string.Format("   Kills: {0, -13} Room: {1}", TotalKills, Stage)];
+        List<string> strings = [string.Format("   Level: {0, -13} Gold: {1}", LVL, GLD), string.Format("   Health: {0:0}/{1, -8} EXP: {2}/{3}", Health, MaxHealth, EXP, MaxEXP), string.Format("   Points: {0, -13} Deity: {1}", PTS, DeityName), "   --------------------------------------------", string.Format("   HP: {0, -16} DEF: {1}", HP, DEF), string.Format("   ATK: {0, -15} INT: {1}", ATK, INT), string.Format("   SPD: {0, -15} LCK: {1}", SPD, LCK), string.Format("   Kills: {0, -13} Room: {1}", TotalKills, Stage)];
 
         for (var i = 0; i < strings.Count; i++)
             StatsDict.Add(2+i, strings[i]);
@@ -495,7 +507,7 @@ public class Entity {
             FinalDMG -= FinalDMG*enemy.Armor;
         
         if (enemy is not Enemy && CheckIfEnemy)
-            FinalDMG *= 0.6;
+            FinalDMG *= 0.7;
         return FinalDMG;
     }
 
@@ -520,7 +532,7 @@ public class Entity {
             Narrate($"{Name} used Blood Strike!");
             DMG = GetDMG((ATK*1.8)+(MaxHealth*0.05), enemy);
             if (CheckEvade(DMG, enemy)) 
-                Narrate($"{enemy.Name} got hit for {DMG:0} DMG in exchange for {Name}'s {MaxHealth*0.1} health!");
+                Narrate($"{enemy.Name} got hit for {DMG:0} DMG in exchange for {Name}'s {MaxHealth*0.1:0} health!");
             ATK -= 5;
             UpdateStats();
             
@@ -532,7 +544,7 @@ public class Entity {
         Narrate($"{Name} used Life Drain!");
         if (CheckEvade(DMG, enemy)) {
             Narrate($"{enemy.Name} got hit for {DMG:0} DMG based on 25% of their missing health!");
-            Narrate($"{Name} healed for {DMG*0.45} health!");
+            Narrate($"{Name} healed for {DMG*0.45:0} health!");
         }
     }
     // Reduces Health but increases ATK and SPD for several turns.
@@ -570,20 +582,20 @@ public class Entity {
         Health -= Health*0.25 - DEF*0.5;
         Health += MaxHealth*0.1+DMG*0.55;
         if (CheckEvade(DMG, enemy)) {
-            Narrate($"{enemy.Name} got hit for {DMG:0} DMG for 45% of their max health in exchange for {Name}'s  {Health*0.25 - DEF*0.5} health!");
+            Narrate($"{enemy.Name} got hit for {DMG:0} DMG for 45% of their max health in exchange for {Name}'s  {(Health*0.25 - DEF*0.5):0} health!");
             Narrate($"{Name} healed for {DMG*0.55} health!");
         }
     }
     // Enigma Skills
     // Tinamad na ako
     public void SoulTrack(dynamic enemy) {
-        DMG = INT*2.2;
+        DMG = INT*2.5;
         Narrate($"{Name} used Soul Track!");
         if (CheckEvade(GetDMG(DMG, enemy), enemy))
             Narrate($"{enemy.Name} got hit for {DMG:0} DMG ignoring their armor!");
     }
     public void Shadowflame(dynamic enemy) {
-        DMG = INT*1.3;
+        DMG = INT*1.4;
         Narrate($"{Name} used Shadowflame!");
         int times = NextInt(1, 3);
         for (var i = 0; i < times; i++) {
@@ -630,7 +642,7 @@ public class Entity {
             Narrate($"This skill is already in play!");
             Narrate($"Effect will last for two more turns!");
         }
-        DMG = GetDMG(INT*3, enemy);
+        DMG = GetDMG(INT*2.5, enemy);
         Skill5Timer = 3;
         
         if (CheckEvade(DMG, enemy)) 
@@ -888,7 +900,7 @@ public class Enemy(int x, int y) : Entity {
 
         player.Health += HealAmount;
         
-        Print($"Regenerated {HealAmount} health!");
+        player.Narrate($"Regenerated {HealAmount:0} health!");
         Sleep(800);
         player.RoomKills++;
         player.TotalKills++;
@@ -1055,7 +1067,7 @@ public class RoomGenerator {
 
                 player.Health += HealAmount;
                 Console.WriteLine();
-                player.Narrate($"Restored {HealAmount} health.", 5, 50);
+                player.Narrate($"Restored {HealAmount:0} health.", 5, 50);
                 Room[player.X, player.Y] = new Tile(TileType.Empty);
                 break;
             case TileType.Gold:
@@ -1272,51 +1284,50 @@ public class RoomGenerator {
     public static void EvaluateTimers(Enemy enemy) {
         // Evaluates the timers of each skill and their effects. Needs optimization.
         foreach (KeyValuePair<dynamic, dynamic> kvp in new Dictionary<dynamic, dynamic>(){{player, enemy}, {enemy, player}}) {
-                if (kvp.Key.Skill3Timer != 0 || kvp.Key.Skill4Timer != 0 || kvp.Key.Skill5Timer != 0) {
+                if (kvp.Key.Skill3Timer != 0)
                     kvp.Key.Skill3Timer--;
+                if (kvp.Key.Skill4Timer != 0)
                     kvp.Key.Skill4Timer--;
+                if (kvp.Key.Skill5Timer != 0)
                     kvp.Key.Skill5Timer--;
-                }
-                else {
-                    switch(kvp.Key.Deity) {
-                    case DeityEnum.Sacrifice:
-                        if (kvp.Key.Skill3Timer == 1) {
-                            kvp.Key.ATK -= 3;
-                            kvp.Key.SPD -= 3;
-                        } else if (kvp.Key.Skill4Timer == 1) {
-                            kvp.Value.DEF += 6;
-                        }
-                        break;
-                    case DeityEnum.Enigma:
-                        if (kvp.Key.Skill3Timer == 1) {    
-                            kvp.Key.DEF -= 3;
-                            kvp.Key.SPD -= 3;
-                        } else if (kvp.Key.Skill4Timer == 1) {
-                            kvp.Value.ATK += 3;
-                            kvp.Value.SPD += 3;
-                        } else if (kvp.Key.Skill5Timer == 1) {
-                            kvp.Value.SPD -= 5;
-                        }
-                        break;
-                    case DeityEnum.Harvest:
+                switch(kvp.Key.Deity) {
+                case DeityEnum.Sacrifice:
                     if (kvp.Key.Skill3Timer == 1) {
-                        kvp.Key.MaxHealth -= GrowthAmount;
-                        kvp.Key.Health -= GrowthAmount;
+                        kvp.Key.ATK -= 3;
+                        kvp.Key.SPD -= 3;
                     } else if (kvp.Key.Skill4Timer == 1) {
+                        kvp.Value.DEF += 6;
+                    }
+                    break;
+                case DeityEnum.Enigma:
+                    if (kvp.Key.Skill3Timer == 1) {    
+                        kvp.Key.DEF -= 3;
+                        kvp.Key.SPD -= 3;
+                    } else if (kvp.Key.Skill4Timer == 1) {
+                        kvp.Value.ATK += 3;
                         kvp.Value.SPD += 3;
-                        kvp.Value.INT += 3;
+                    } else if (kvp.Key.Skill5Timer == 1) {
+                        kvp.Value.SPD -= 5;
                     }
-                        break;
-                    case DeityEnum.End:
-                        if (kvp.Key.Skill1Timer == 1) {
-                            kvp.Key.SPD -= 3;
-                            kvp.Key.LCK -= 3;
-                        } else if (kvp.Key.Skill4Timer == 1) {
-                            kvp.Value.ATK += 4;
-                            kvp.Key.ATK -= 4;
-                        }
-                        break;
+                    break;
+                case DeityEnum.Harvest:
+                if (kvp.Key.Skill3Timer == 1) {
+                    kvp.Key.MaxHealth -= GrowthAmount;
+                    kvp.Key.Health -= GrowthAmount;
+                } else if (kvp.Key.Skill4Timer == 1) {
+                    kvp.Value.SPD += 3;
+                    kvp.Value.INT += 3;
+                }
+                    break;
+                case DeityEnum.End:
+                    if (kvp.Key.Skill1Timer == 1) {
+                        kvp.Key.SPD -= 3;
+                        kvp.Key.LCK -= 3;
+                    } else if (kvp.Key.Skill4Timer == 1) {
+                        kvp.Value.ATK += 4;
+                        kvp.Key.ATK -= 4;
                     }
+                    break;
                 }
             }
     }
@@ -1346,9 +1357,9 @@ public class RoomGenerator {
                 [
                     $"Soul Track\n     Damage: {player.INT*1.5:0} INT DMG\n", 
                     $"Shadowflame\n     Damage: {player.INT*0.7:0} INT DMG 1-3 times\n", 
-                    $"Mana Veil\n     Effect: +3 DEF & +3 SP\nD", 
+                    $"Mana Veil\n     Effect: +3 DEF & +3 SPD\n", 
                     $"Conjure Illusions\n     Effect: Enemy -3 ATK & -3 SPD\n", 
-                    $"Dimensional Rift\n     Damage: {player.INT*3:0} DMG\n     Effect: +5 SPD\n"
+                    $"Dimensional Rift\n     Damage: {player.INT*2.5:0} DMG\n     Effect: +5 SPD\n"
                 ];
                 break;
             case DeityEnum.Harvest:
@@ -1502,7 +1513,7 @@ public class RoomGenerator {
         Console.Clear();
         player.Narrate("You attempted to flee.");
         if (0.4+player.LCK*0.01 > RNG.NextDouble()) {
-            player.Skill3Timer = player.Skill4Timer = enemy.Skill3Timer = enemy.Skill4Timer = enemy.Skill5Timer = player.Skill5Timer = 0;
+            player.Skill3Timer = player.Skill4Timer = enemy.Skill3Timer = enemy.Skill4Timer = enemy.Skill5Timer = player.Skill5Timer = 1;
             IsOver = true;
             player.Narrate("You successfully fled from battle!");
             EvaluateTimers(enemy);
@@ -2731,7 +2742,7 @@ public class RoomGenerator {
             enemy.WriteStats();
         if (NeedInput) {
             Console.Write("\nPress any key to continue... ");
-            Console.ReadLine();
+            Console.ReadKey();
             Console.Clear();
         }
         Console.WriteLine("\n");
@@ -2792,42 +2803,42 @@ public class RoomGenerator {
                         player.PTS--;
                         Print("+1 HP");
                         Print($"HP: {player.HP}");
-                        Sleep(750);
+                        Sleep(450);
                         break;
                     case '2':
                         player.DEF++;
                         player.PTS--;
                         Print("+1 DEF");
                         Print($"DEF: {player.DEF}");
-                        Sleep(750);
+                        Sleep(450);
                         break;
                     case '3':
                         player.ATK++;
                         player.PTS--;
                         Print("+1 ATK");
                         Print($"ATK: {player.ATK}");
-                        Sleep(750);
+                        Sleep(450);
                         break;
                     case '4':
                         player.INT++;
                         player.PTS--;
                         Print("+1 INT");
                         Print($"INT: {player.INT}");
-                        Sleep(750);
+                        Sleep(450);
                         break;
                     case '5':
                         player.SPD++;
                         player.PTS--;
                         Print("+1 SPD");
                         Print($"SPD: {player.SPD}");
-                        Sleep(750);
+                        Sleep(450);
                         break;
                     case '6':
                         player.LCK++;
                         player.PTS--;
                         Print("+1 LCK");
                         Print($"LCK: {player.LCK}");
-                        Sleep(750);
+                        Sleep(450);
                         break;
                     case 'e':
                         flag = false;
