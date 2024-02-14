@@ -78,15 +78,16 @@ static void Main() {
 
 public static void SacrificeRoute() {
     Sacrifice.Name = "???";
-    player.Think("A deafening thud emerged from behind.");
-    player.Think("I feel an ominous figure glaring at me.");
+    player.Think("The ground shook with a deafening thud from the shadows.");
+    player.Think("An ominous presence, powerful and domineering, fixed its gaze upon me.");
     Sleep(300);
-    player.Think("Blood poured out from my eyes.");
-    player.Think("A scream emerged from somewhere.");
-    player.Think("No... A laugh?");
+    player.Think("Blood, thick and warm, streamed down my face, a crimson veil over my eyes.");
+    player.Think("A distant scream...");
+    player.Think("No... a laugh?");
+    player.Think("Was it mockery? Triumph?");
     Sleep(300);
-    player.Think("The noise is getting closer...");
-    player.Think("My ears bled red.");
+    player.Think("The chilling sound drew nearer, a harbinger of doom.");
+    player.Think("Blood from my ears, painting my descent into despair.");
     Sleep(300);
     Sacrifice.Talk("BWAHA..!");
     player.Think("I have to run...");
@@ -95,13 +96,13 @@ public static void SacrificeRoute() {
     player.Think("My knees betrayed my body.");
     Sleep(400);
     Sacrifice.Talk("BWAHAHAHAHAHA!");
-    player.Think("A monstrous horned-figure wearing devilish armor emerged...");
+    player.Think("Then, from the abyss, a monstrous figure clad in devilish armor approached, its horns piercing the silence...");
     Sacrifice.Name = "SACRIFICE";
     Sacrifice.Talk("THERE'S NOTHING YOU CAN DO!");
     player.Talk("...What?");
     Sacrifice.Talk("MASTER OF BLOOD AND BLADE, DEITY OF THE ENDLESS FRAY!");
     Sacrifice.Talk("IT IS I! SACRIFICE! AND I SHALL BESTOW UPON YOU GLORY AND DOMINATION!");
-    Sacrifice.Talk("DRINK MY BURNING BLOOD, SHOULD YOU WISH TO DEFY DEATH HERSELF!");
+    Sacrifice.Talk("DRINK MY SCORCHING BLOOD, SHOULD YOU WISH TO DEFY DEATH HERSELF!");
     player.Talk("Ha?");
     Console.WriteLine();
     player.Narrate("You chose Sacrifice as your Deity.");
