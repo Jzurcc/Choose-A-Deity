@@ -269,7 +269,7 @@ public class Entity {
     // Attribute variables
     public string Name, DeityName;
     public int Skill1Timer, Skill2Timer, Skill3Timer, Skill4Timer, Skill5Timer;
-    public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, MaxEXP, EXPDrop, LVL, PTS, IntHealth, IntMaxHealth, ATKM;
+    public int HP, ATK, DEF, INT, SPD, LCK, GLD, EXP, MaxEXP, EXPDrop, LVL, PTS, IntHealth, IntMaxHealth;
     public double Health, MaxHealth, DMG, Armor, FinalDMG;
     public dynamic ChosenDeity;
     // Room variables
@@ -310,7 +310,6 @@ public class Entity {
         this.IntMaxHealth = Convert.ToInt32(MaxHealth);
         this.DMG = ATK;
         this.FinalDMG = DMG;
-        this.ATKM = ATK*3/4;
         this.Armor = Math.Clamp(Math.Round(DEF*0.02), 0, 0.5);
         // Skill variables
         this.Skill1Timer = 0;
@@ -472,7 +471,6 @@ public class Entity {
         MaxEXP = 80 + LVL*20;
         MaxHealth = 20 + HP*8;
         Armor = Math.Clamp(Math.Round(DEF*0.02), 0, 0.5);
-        ATKM = ATK*3/4;
         if (updateHealth)
             Health = MaxHealth;
     }
@@ -698,27 +696,29 @@ public class Entity {
     // End Skills
     public void SoulBleed(dynamic enemy) {
         Narrate($"{Name} used Soul Bleed!");
-        DMG = GetDMG(ATK*1.5, enemy, true);
+        DMG = GetDMG(ATK*1.2, enemy, true);
         if (CheckEvade(DMG, enemy)) {
             Narrate($"{enemy.Name} got hit for {DMG:0} DMG ignoring armor!");
             for (int i = 0; i < 3; i++) {
-                double Bleed = GetDMG(enemy.MaxHealth*0.06, enemy, true, 0.5, 1.5, false);
+                double Bleed = GetDMG(enemy.MaxHealth*0.09, enemy, true);
                 enemy.Health -= Bleed;
                 Narrate($"{enemy.Name} bled for {Bleed} DMG ignoring armor!");
-        }
+            }
         }
     }
+
     public void VoidSlash(dynamic enemy) {
         Narrate($"{Name} used Void Slash!");
-        int times = NextInt(2, 5);
+        int times = NextInt(1, 3);
         for (int i = 0; i < times; i++)
         {
-            DMG = GetDMG(ATK*1.3, enemy);
+            DMG = GetDMG(ATK*0.5, enemy);
             if (CheckEvade(DMG, enemy)) 
                 Narrate($"{enemy.Name} got hit for {DMG:0} DMG!");
         }
         Narrate($"Void Slash hit {times} times!");
     }
+    
     public void ShroudedMist() {
         Narrate($"{Name} used Shrouded Mist!");
         if (Skill3Timer == 0) {
@@ -746,7 +746,7 @@ public class Entity {
 
     public void Annhilation(dynamic enemy) {
         Narrate($"{Name} used Annhilation!");
-        DMG = GetDMG(Math.Clamp(ATK*1.2+ATK*0.2*(Math.Max(1, TotalKills)), 0, ATK*20), enemy);
+        DMG = GetDMG(Math.Clamp(ATK*1.2+ATK*0.2*Math.Max(1, TotalKills), 0, ATK*20), enemy);
         if (CheckEvade(DMG, enemy))
             Narrate($"{enemy.Name} got hit for {DMG:0} DMG based on {Name}'s kills!");
     }
@@ -810,31 +810,31 @@ public class Enemy(int x, int y) : Entity {
     }
     public void GetDeityStats() {
         switch (Deity) {
-            case DeityEnum.Sacrifice:
-                HP += 5;
-                DEF += 3;
-                GLD -= 50;
-                ATK -= 3;
-                SPD -= 3;
-                break;
-            case DeityEnum.Enigma:
-                INT += 5;
-                PTS += 3;
-                HP -= 3;
-                ATK -= 5;
-                break;
-            case DeityEnum.Harvest:
-                LCK += 6;
-                PTS += 2;
-                DEF -= 3;
-                SPD -= 5;
-                break;
-            case DeityEnum.End:
-                ATK += 5;
-                SPD += 3;
-                HP -= 3;
-                DEF -= 5;
-                break;
+        case DeityEnum.Sacrifice:
+            HP += 5;
+            DEF += 3;
+            GLD -= 50;
+            ATK -= 3;
+            SPD -= 3;
+            break;
+        case DeityEnum.Enigma:
+            INT += 5;
+            PTS += 3;
+            HP -= 3;
+            ATK -= 5;
+            break;
+        case DeityEnum.Harvest:
+            LCK += 6;
+            PTS += 2;
+            DEF -= 3;
+            SPD -= 5;
+            break;
+        case DeityEnum.End:
+            ATK += 5;
+            SPD += 3;
+            HP -= 3;
+            DEF -= 5;
+            break;
         }
         UpdateStats(true);
     }
@@ -883,12 +883,10 @@ public class Enemy(int x, int y) : Entity {
     }
     public void Defeat() {
         double HealAmount = player.MaxHealth*0.2;
-        if (player.Health + HealAmount <= player.MaxHealth)
-            player.Health += HealAmount;
-        else {
-            HealAmount -= player.Health + HealAmount - player.MaxHealth;
-            player.Health += HealAmount;
-        }
+        if (player.Health + HealAmount >= player.MaxHealth)
+            HealAmount = player.MaxHealth - player.Health;
+
+        player.Health += HealAmount;
         
         Print($"Regenerated {HealAmount} health!");
         Sleep(800);
@@ -1047,28 +1045,26 @@ public class RoomGenerator {
             
             // Checks if player's tile is a portal
             switch (Room[player.X, player.Y].Type) {
-                case TileType.Portal:
-                    UsePortal();
-                    break;
-                case TileType.HealingPotion:
-                    double HealAmount = NextInt(Convert.ToInt32(player.IntMaxHealth/3), Convert.ToInt32(player.IntMaxHealth/3*1.3)); // Determine the healing amount
-                    if (player.Health + HealAmount <= player.MaxHealth)
-                        player.Health += HealAmount;
-                    else {
-                        HealAmount -= player.Health + HealAmount - player.MaxHealth;
-                        player.Health += HealAmount;
-                    }
-                    Console.WriteLine();
-                    player.Narrate($"Restored {HealAmount} health.", 5, 50);
-                    Room[player.X, player.Y] = new Tile(TileType.Empty);
-                    break;
-                case TileType.Gold:
-                    int GoldAmount = NextInt(5, Convert.ToInt32(player.LCK*5/2)-15);
-                    player.GLD += GoldAmount;
-                    Console.WriteLine();
-                    player.Narrate($"Gained {GoldAmount} gold.", 5, 50);
-                    Room[player.X, player.Y] = new Tile(TileType.Empty);
-                    break;
+            case TileType.Portal:
+                UsePortal();
+                break;
+            case TileType.HealingPotion:
+                double HealAmount = NextInt(Convert.ToInt32(player.IntMaxHealth/5*0.6), Convert.ToInt32(player.IntMaxHealth/5*1.3)); // Determine the healing amount
+                 if (player.Health + HealAmount >= player.MaxHealth)
+                    HealAmount = player.MaxHealth - player.Health;
+
+                player.Health += HealAmount;
+                Console.WriteLine();
+                player.Narrate($"Restored {HealAmount} health.", 5, 50);
+                Room[player.X, player.Y] = new Tile(TileType.Empty);
+                break;
+            case TileType.Gold:
+                int GoldAmount = NextInt(5, Convert.ToInt32(player.LCK*5/2)-15);
+                player.GLD += GoldAmount;
+                Console.WriteLine();
+                player.Narrate($"Gained {GoldAmount} gold.", 5, 50);
+                Room[player.X, player.Y] = new Tile(TileType.Empty);
+                break;
             }
 
             // Checks if player encounters enemy
@@ -1146,6 +1142,8 @@ public class RoomGenerator {
         if (enemy.Health <= 0) {
             enemy.Defeat();
             IsOver = true;
+            if (player.TotalKills % 5 == 0 && !RoomClear)
+                player.Narrate("A portal has appeared in the room!", 15, 1000);
         } else if (player.Health <= 0) {
             player.Die();
         } 
@@ -1165,18 +1163,18 @@ public class RoomGenerator {
             // Chooses a random skill based on the enemy's deity. The percentage of which skill to use is specific for each deity.
             double ChosenSkill = RNG.NextDouble();
             switch (enemy.Deity) {
-                case DeityEnum.Sacrifice:
-                    SacrificeSkills(ChosenSkill, enemy);
-                    break;
-                case DeityEnum.Enigma:
-                    EnigmaSkills(ChosenSkill, enemy);
-                    break;
-                case DeityEnum.Harvest:
-                    HarvestSkills(ChosenSkill, enemy);
-                    break;
-                case DeityEnum.End:
-                    EndSkills(ChosenSkill, enemy);
-                    break;
+            case DeityEnum.Sacrifice:
+                SacrificeSkills(ChosenSkill, enemy);
+                break;
+            case DeityEnum.Enigma:
+                EnigmaSkills(ChosenSkill, enemy);
+                break;
+            case DeityEnum.Harvest:
+                HarvestSkills(ChosenSkill, enemy);
+                break;
+            case DeityEnum.End:
+                EndSkills(ChosenSkill, enemy);
+                break;
             }
             if(!IsOver) CheckHealth(enemy);
             Console.WriteLine("Press any key to continue...");
@@ -1248,22 +1246,22 @@ public class RoomGenerator {
                 Console.WriteLine();
                 Divider();
                 switch (GetChoice(0, 0, "Attack", "Inventory", "Show Enemy", "Attempt Flee")) {
-                    case 1:
-                        Console.Clear();
-                        StayTurn = Attack(enemy);
-                        break;
-                    case 2:
-                        Console.Clear();
-                        BattleInventory();
-                        StayTurn = true;
-                        break;
-                    case 3:
-                        PrintEnemy(enemy);
-                        StayTurn = true;
-                        break;
-                    case 4:
-                        AttemptFlee(enemy);
-                        break;
+                case 1:
+                    Console.Clear();
+                    StayTurn = Attack(enemy);
+                    break;
+                case 2:
+                    Console.Clear();
+                    BattleInventory();
+                    StayTurn = true;
+                    break;
+                case 3:
+                    PrintEnemy(enemy);
+                    StayTurn = true;
+                    break;
+                case 4:
+                    AttemptFlee(enemy);
+                    break;
                 }
                 Console.Clear();
             }
@@ -1281,43 +1279,43 @@ public class RoomGenerator {
                 }
                 else {
                     switch(kvp.Key.Deity) {
-                        case DeityEnum.Sacrifice:
-                            if (kvp.Key.Skill3Timer == 1) {
-                                kvp.Key.ATK -= 3;
-                                kvp.Key.SPD -= 3;
-                            } else if (kvp.Key.Skill4Timer == 1) {
-                                kvp.Value.DEF += 6;
-                            }
-                            break;
-                        case DeityEnum.Enigma:
-                            if (kvp.Key.Skill3Timer == 1) {    
-                                kvp.Key.DEF -= 3;
-                                kvp.Key.SPD -= 3;
-                            } else if (kvp.Key.Skill4Timer == 1) {
-                                kvp.Value.ATK += 3;
-                                kvp.Value.SPD += 3;
-                            } else if (kvp.Key.Skill5Timer == 1) {
-                                kvp.Value.SPD -= 5;
-                            }
-                            break;
-                        case DeityEnum.Harvest:
+                    case DeityEnum.Sacrifice:
                         if (kvp.Key.Skill3Timer == 1) {
-                            kvp.Key.MaxHealth -= GrowthAmount;
-                            kvp.Key.Health -= GrowthAmount;
+                            kvp.Key.ATK -= 3;
+                            kvp.Key.SPD -= 3;
                         } else if (kvp.Key.Skill4Timer == 1) {
-                            kvp.Value.SPD += 3;
-                            kvp.Value.INT += 3;
+                            kvp.Value.DEF += 6;
                         }
-                            break;
-                        case DeityEnum.End:
-                            if (kvp.Key.Skill1Timer == 1) {
-                                kvp.Key.SPD -= 3;
-                                kvp.Key.LCK -= 3;
-                            } else if (kvp.Key.Skill4Timer == 1) {
-                                kvp.Value.ATK += 4;
-                                kvp.Key.ATK -= 4;
-                            }
-                            break;
+                        break;
+                    case DeityEnum.Enigma:
+                        if (kvp.Key.Skill3Timer == 1) {    
+                            kvp.Key.DEF -= 3;
+                            kvp.Key.SPD -= 3;
+                        } else if (kvp.Key.Skill4Timer == 1) {
+                            kvp.Value.ATK += 3;
+                            kvp.Value.SPD += 3;
+                        } else if (kvp.Key.Skill5Timer == 1) {
+                            kvp.Value.SPD -= 5;
+                        }
+                        break;
+                    case DeityEnum.Harvest:
+                    if (kvp.Key.Skill3Timer == 1) {
+                        kvp.Key.MaxHealth -= GrowthAmount;
+                        kvp.Key.Health -= GrowthAmount;
+                    } else if (kvp.Key.Skill4Timer == 1) {
+                        kvp.Value.SPD += 3;
+                        kvp.Value.INT += 3;
+                    }
+                        break;
+                    case DeityEnum.End:
+                        if (kvp.Key.Skill1Timer == 1) {
+                            kvp.Key.SPD -= 3;
+                            kvp.Key.LCK -= 3;
+                        } else if (kvp.Key.Skill4Timer == 1) {
+                            kvp.Value.ATK += 4;
+                            kvp.Key.ATK -= 4;
+                        }
+                        break;
                     }
                 }
             }
@@ -1333,46 +1331,46 @@ public class RoomGenerator {
             player.UpdateStats();
             // Changes the choices depending on the user's deity.
             switch(player.Deity) {
-                case DeityEnum.Sacrifice:
+            case DeityEnum.Sacrifice:
+                AttackDescriptions = 
+                [
+                    $"Blood Strike\n     Damage: {(5+player.ATK)*1.8+player.MaxHealth*0.05:0} DMG\n     Cost: {player.MaxHealth*0.1} Health\n", 
+                    $"Life Drain\n     Damage: {player.ATK*0.8+(player.MaxHealth - player.Health)*0.25:0} DMG (Scales with Enemy Missing Health)\n     Effect: Heal {player.MaxHealth*0.1+(player.MaxHealth - player.Health)*0.25*0.45:0} health\n", 
+                    "Sacrificial Power\n     Effect: +3 ATK & +3 SPD\n", 
+                    "Weaken Resolve\n     Effect: Enemy -6 DEF\n", 
+                    $"Ultimate Sacrifice\n     Damage: {player.ATK*0.6+enemy.MaxHealth*0.4:0} DMG\n     Cost: {player.Health*0.25} Health\n     Effect: Heal {(player.ATK*0.6+enemy.MaxHealth*0.4)*0.55:0} health\n"
+                ];
+                break;
+            case DeityEnum.Enigma:
+                AttackDescriptions = 
+                [
+                    $"Soul Track\n     Damage: {player.INT*1.5:0} INT DMG\n", 
+                    $"Shadowflame\n     Damage: {player.INT*0.7:0} INT DMG 1-3 times\n", 
+                    $"Mana Veil\n     Effect: +3 DEF & +3 SP\nD", 
+                    $"Conjure Illusions\n     Effect: Enemy -3 ATK & -3 SPD\n", 
+                    $"Dimensional Rift\n     Damage: {player.INT*3:0} DMG\n     Effect: +5 SPD\n"
+                ];
+                break;
+            case DeityEnum.Harvest:
+                AttackDescriptions = 
+                [
+                    $"Thorned Wrath\n     Damage: {player.ATK*0.4+player.LCK*0.5:0} DMG\n     Effect: {player.LCK*0.04*100}% chance to heal {player.ATK*0.4+player.LCK*0.5*0.5:0} Health\n", 
+                    $"Lucky Punch\n     Damage: {player.ATK*1.5+player.LCK*1.5:0} DMG\n", 
+                    $"Growth\n     Effect: Gain {player.MaxHealth*0.25:0} health for two turns\n", 
+                    $"Wither\n     Effect: Enemy -3 SPD & -3 INT\n", 
+                    $"Rooted Rampage\n     Damage: {(player.LCK*1.5).ToString("0")} DMG 3-6 times\n"
+                ];
+                break;
+            case DeityEnum.End:
                     AttackDescriptions = 
-                    [
-                        $"Blood Strike\n     Damage: {((5+player.ATK)*1.8+player.MaxHealth*0.05):0} DMG\n     Cost: {player.MaxHealth*0.1} Health\n", 
-                        $"Life Drain\n     Damage: {(player.ATK*0.8+(player.MaxHealth - player.Health)*0.25):0} DMG (Scales with Enemy Missing Health)\n     Effect: Heal {(player.MaxHealth*0.1+(player.MaxHealth - player.Health)*0.25*0.45):0} health\n", 
-                        "Sacrificial Power\n     Effect: +3 ATK & +3 SPD\n", 
-                        "Weaken Resolve\n     Effect: Enemy -6 DEF\n", 
-                        $"Ultimate Sacrifice\n     Damage: {player.ATK*0.6+enemy.MaxHealth*0.4:0} DMG\n     Cost: {player.Health*0.25} Health\n     Effect: Heal {((player.ATK*0.6+enemy.MaxHealth*0.4)*0.55):0} health\n"
-                    ];
-                    break;
-                case DeityEnum.Enigma:
-                    AttackDescriptions = 
-                    [
-                        $"Soul Track\n     Damage: {(player.INT*1.5):0} INT DMG\n", 
-                        $"Shadowflame\n     Damage: {(player.INT*0.7):0} INT DMG 1-3 times\n", 
-                        $"Mana Veil\n     Effect: +3 DEF & +3 SP\nD", 
-                        $"Conjure Illusions\n     Effect: Enemy -3 ATK & -3 SPD\n", 
-                        $"Dimensional Rift\n     Damage: {(player.INT*3):0} DMG\n     Effect: +5 SPD\n"
-                    ];
-                    break;
-                case DeityEnum.Harvest:
-                    AttackDescriptions = 
-                    [
-                        $"Thorned Wrath\n     Damage: {(player.ATK*0.4+player.LCK*0.5):0} DMG\n     Effect: {player.LCK*0.04*100}% chance to heal {(player.ATK*0.4+player.LCK*0.5*0.5):0} Health\n", 
-                        $"Lucky Punch\n     Damage: {(player.ATK*1.5+player.LCK*1.5):0} DMG\n", 
-                        $"Growth\n     Effect: Gain {(player.MaxHealth*0.25):0} health for two turns\n", 
-                        $"Wither\n     Effect: Enemy -3 SPD & -3 INT\n", 
-                        $"Rooted Rampage\n     Damage: {(player.LCK*1.5).ToString("0")} DMG 3-6 times\n"
-                    ];
-                    break;
-                case DeityEnum.End:
-                    AttackDescriptions = 
-                    [
-                        $"Soul Bleed\n     Damage: {player.ATK*1.2:0} DMG & {enemy.MaxHealth*0.06:0} DMG 0-3 times\n", 
-                        $"Void Slash\n     Damage: {player.ATK*1.3:0} DMG 1-4 times\n", 
-                        $"Shrouded Mist\n     Effect: +3 SPD & +3 LCK\n", 
-                        $"Steal Strength\n     Effect: +4 ATK & Enemy -4 ATK\n", 
-                        $"Annhilation\n     Damage: {player.ATK*0.5+player.ATK*0.1*(player.TotalKills+1):0} DMG\n"
-                    ];
-                    break;
+                [
+                    $"Soul Bleed\n     Damage: {player.ATK*1.2:0} DMG & {enemy.MaxHealth*0.06:0} DMG 0-3 times\n", 
+                    $"Void Slash\n     Damage: {player.ATK*0.9:0} DMG 1-3 times\n", 
+                    $"Shrouded Mist\n     Effect: +3 SPD & +3 LCK\n", 
+                    $"Steal Strength\n     Effect: +4 ATK & Enemy -4 ATK\n", 
+                    $"Annhilation\n     Damage: {player.ATK*0.5+player.ATK*0.1*(player.TotalKills+1):0} DMG\n"
+                ];
+                break;
             }
             AttackDescriptions.Add("Cancel");
 
@@ -1396,95 +1394,95 @@ public class RoomGenerator {
         // Activates the selected skill
         switch(player.Deity) {
             case DeityEnum.Sacrifice:
-                switch (Choice) {
-                case 1:
-                    player.BloodStrike(enemy);
-                    break;
-                case 2:
-                    player.LifeDrain(enemy);
-                    break;
-                case 3:
-                    player.SacrificialPower(enemy);
-                    break;
-                case 4:
-                    player.WeakenResolve(enemy);
-                    break;
-                case 5:
-                    player.UltimateSacrifice(enemy);
-                    break;
-                case 6:
-                    return true;
-                }
+            switch (Choice) {
+            case 1:
+                player.BloodStrike(enemy);
                 break;
+            case 2:
+                player.LifeDrain(enemy);
+                break;
+            case 3:
+                player.SacrificialPower(enemy);
+                break;
+            case 4:
+                player.WeakenResolve(enemy);
+                break;
+            case 5:
+                player.UltimateSacrifice(enemy);
+                break;
+            case 6:
+                return true;
+            }
+            break;
             case DeityEnum.Enigma:
-                switch (Choice) {
-                case 1:
-                    player.SoulTrack(enemy);
-                    break;
-                case 2:
-                    player.Shadowflame(enemy);
-                    break;
-                case 3:
-                    player.ManaVeil();
-                    break;
-                case 4:
-                    player.ConjureIllusions(enemy);
-                    break;
-                case 5:
-                    player.DimensionalRift(enemy);
-                    break;
-                case 6:
-                    StayTurn = true;
-                    break;
-                }
+            switch (Choice) {
+            case 1:
+                player.SoulTrack(enemy);
                 break;
+            case 2:
+                player.Shadowflame(enemy);
+                break;
+            case 3:
+                player.ManaVeil();
+                break;
+            case 4:
+                player.ConjureIllusions(enemy);
+                break;
+            case 5:
+                player.DimensionalRift(enemy);
+                break;
+            case 6:
+                StayTurn = true;
+                break;
+            }
+            break;
             case DeityEnum.Harvest:
-                switch (Choice) {
-                case 1:
-                    player.ThornedWrath(enemy);
-                    break;
-                case 2:
-                    player.LuckyPunch(enemy);
-                    break;
-                case 3:
-                    player.Growth();
-                    break;
-                case 4:
-                    player.Wither(enemy);
-                    break;
-                case 5:
-                    player.RootedRampage(enemy);
-                    break;
-                case 6:
-                    StayTurn = true;
-                    break;
-                }
+            switch (Choice) {
+            case 1:
+                player.ThornedWrath(enemy);
                 break;
+            case 2:
+                player.LuckyPunch(enemy);
+                break;
+            case 3:
+                player.Growth();
+                break;
+            case 4:
+                player.Wither(enemy);
+                break;
+            case 5:
+                player.RootedRampage(enemy);
+                break;
+            case 6:
+                StayTurn = true;
+                break;
+            }
+            break;
             case DeityEnum.End:
-                switch (Choice) {
-                case 1:
-                    player.SoulBleed(enemy);
-                    break;
-                case 2:
-                    player.VoidSlash(enemy);
-                    break;
-                case 3:
-                    player.ShroudedMist();
-                    break;
-                case 4:
-                    player.StealStrength(enemy);
-                    break;
-                case 5:
-                    player.Annhilation(enemy);
-                    break;
-                case 6:
-                    StayTurn = true;
-                    break;
-                }
+            switch (Choice) {
+            case 1:
+                player.SoulBleed(enemy);
                 break;
+            case 2:
+                player.VoidSlash(enemy);
+                break;
+            case 3:
+                player.ShroudedMist();
+                break;
+            case 4:
+                player.StealStrength(enemy);
+                break;
+            case 5:
+                player.Annhilation(enemy);
+                break;
+            case 6:
+                StayTurn = true;
+                break;
+            }
+            break;
         }
         Console.WriteLine("Press any key to continue...");
-        Console.ReadKey();
+        Console.ReadLine();
         Console.Clear();
         return StayTurn;
     }
@@ -2753,21 +2751,21 @@ public class RoomGenerator {
                 else {
                     // Writes the tiles according to type.
                     switch (Room[i, j].Type) {
-                        case TileType.Empty:
-                            WriteTile(". ", ConsoleColor.Black);
-                            break;
-                        case TileType.Wall:
-                            WriteTile("# ", ConsoleColor.Black);
-                            break;
-                        case TileType.Portal:
-                            WriteTile("O ", ConsoleColor.Blue);
-                            break;
-                        case TileType.HealingPotion:
-                            WriteTile("o ", ConsoleColor.Red);
-                            break;
-                        case TileType.Gold:
-                            WriteTile("o ", ConsoleColor.Yellow);
-                            break;
+                    case TileType.Empty:
+                        WriteTile(". ", ConsoleColor.Black);
+                        break;
+                    case TileType.Wall:
+                        WriteTile("# ", ConsoleColor.Black);
+                        break;
+                    case TileType.Portal:
+                        WriteTile("O ", ConsoleColor.Blue);
+                        break;
+                    case TileType.HealingPotion:
+                        WriteTile("o ", ConsoleColor.Red);
+                        break;
+                    case TileType.Gold:
+                        WriteTile("o ", ConsoleColor.Yellow);
+                        break;
                     }
                 }
 
@@ -2789,54 +2787,54 @@ public class RoomGenerator {
                     Menu = "";
                     input = char.ToLower(Console.ReadKey().KeyChar);
                     switch (input) {
-                        case '1':
-                            player.HP++;
-                            player.PTS--;
-                            Print("+1 HP");
-                            Print($"HP: {player.HP}");
-                            Sleep(300);
-                            break;
-                        case '2':
-                            player.DEF++;
-                            player.PTS--;
-                            Print("+1 DEF");
-                            Print($"DEF: {player.DEF}");
-                            Sleep(300);
-                            break;
-                        case '3':
-                            player.ATK++;
-                            player.PTS--;
-                            Print("+1 ATK");
-                            Print($"ATK: {player.ATK}");
-                            Sleep(300);
-                            break;
-                        case '4':
-                            player.INT++;
-                            player.PTS--;
-                            Print("+1 INT");
-                            Print($"INT: {player.INT}");
-                            Sleep(300);
-                            break;
-                        case '5':
-                            player.SPD++;
-                            player.PTS--;
-                            Print("+1 SPD");
-                            Print($"SPD: {player.SPD}");
-                            Sleep(300);
-                            break;
-                        case '6':
-                            player.LCK++;
-                            player.PTS--;
-                            Print("+1 LCK");
-                            Print($"LCK: {player.LCK}");
-                            Sleep(300);
-                            break;
-                        case 'e':
-                            flag = false;
-                            break;
-                        default:
-                            Console.WriteLine("Invalid input. Try again.");
-                            break;
+                    case '1':
+                        player.HP++;
+                        player.PTS--;
+                        Print("+1 HP");
+                        Print($"HP: {player.HP}");
+                        Sleep(750);
+                        break;
+                    case '2':
+                        player.DEF++;
+                        player.PTS--;
+                        Print("+1 DEF");
+                        Print($"DEF: {player.DEF}");
+                        Sleep(750);
+                        break;
+                    case '3':
+                        player.ATK++;
+                        player.PTS--;
+                        Print("+1 ATK");
+                        Print($"ATK: {player.ATK}");
+                        Sleep(750);
+                        break;
+                    case '4':
+                        player.INT++;
+                        player.PTS--;
+                        Print("+1 INT");
+                        Print($"INT: {player.INT}");
+                        Sleep(750);
+                        break;
+                    case '5':
+                        player.SPD++;
+                        player.PTS--;
+                        Print("+1 SPD");
+                        Print($"SPD: {player.SPD}");
+                        Sleep(750);
+                        break;
+                    case '6':
+                        player.LCK++;
+                        player.PTS--;
+                        Print("+1 LCK");
+                        Print($"LCK: {player.LCK}");
+                        Sleep(750);
+                        break;
+                    case 'e':
+                        flag = false;
+                        break;
+                    default:
+                        Console.WriteLine("Invalid input. Try again.");
+                        break;
                     }
                     Console.Clear();
                 }
@@ -2866,36 +2864,36 @@ public class RoomGenerator {
         input = char.ToLower(Console.ReadKey().KeyChar);
         Console.WriteLine();
         switch (input) {
-            case 'w':
-                Menu = "";
-                player.Move(-1, 0);
-                break;
-            case 'a':
-                Menu = "";
-                player.Move(0, -1);
-                break;
-            case 's':
-                Menu = "";
-                player.Move(1, 0);
-                break;
-            case 'd':
-                Menu = "";
-                player.Move(0, 1);
-                break;
-            case 'q':
-                Menu = "";
-                return false;
-            case 'r':
-                Menu = "";
-                player.X += 2;
-                player.Y += 2;
-                break;
-            case 'p':
-                Menu = $"   Select the Stat you want to level up: [1] HP, [2] DEF, [3] ATK, [4] INT, [5] SPD, [6] LCK";
-                break;
-            default:
-                Menu = "";
-                break;
+        case 'w':
+            Menu = "";
+            player.Move(-1, 0);
+            break;
+        case 'a':
+            Menu = "";
+            player.Move(0, -1);
+            break;
+        case 's':
+            Menu = "";
+            player.Move(1, 0);
+            break;
+        case 'd':
+            Menu = "";
+            player.Move(0, 1);
+            break;
+        case 'q':
+            Menu = "";
+            return false;
+        case 'r':
+            Menu = "";
+            player.X += 2;
+            player.Y += 2;
+            break;
+        case 'p':
+            Menu = $"   Select the Stat you want to level up: [1] HP, [2] DEF, [3] ATK, [4] INT, [5] SPD, [6] LCK";
+            break;
+        default:
+            Menu = "";
+            break;
         }
         return true;
     }
