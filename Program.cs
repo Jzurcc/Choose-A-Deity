@@ -2,7 +2,7 @@
 
 public class Program {
 // Deity Dialogue variables
-public static Entity player = new(10, 750, ConsoleColor.White, "Player");
+public static Entity player = new(15, 750, ConsoleColor.White, "Player");
 public static Deity Sacrifice = new(25, 750, ConsoleColor.DarkRed, "SACRIFICE"); // Warrior equivalent
 public static Deity Enigma = new(30, 750, ConsoleColor.DarkMagenta, "ENIGMA"); // Mage equivalent
 public static Deity Harvest = new(40, 800, ConsoleColor.DarkGreen, "HARVEST"); // Archer equivalent
