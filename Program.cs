@@ -1354,8 +1354,8 @@ public class RoomGenerator {
             case DeityEnum.Harvest:
                 AttackDescriptions = 
                 [
-                    $"Thorned Wrath\n     Damage: {player.ATK*0.4+player.LCK*0.5:0} DMG\n     Effect: {player.LCK*0.04*100}% chance to heal {player.ATK*0.4+player.LCK*0.5*0.5:0} Health\n", 
-                    $"Lucky Punch\n     Damage: {player.ATK*1.5+player.LCK*1.5:0} DMG\n", 
+                    $"Thorned Wrath\n     Damage: {player.ATK*1.5+player.LCK*1.5:0} DMG\n     Effect: {player.LCK*0.04*100}% chance to heal {player.ATK*1.5+player.LCK*1.5*0.5:0} Health\n", 
+                    $"Lucky Punch\n     Damage: {player.LCK*0.5:0}-{player.LCK*2.5*1.5:0} DMG\n", 
                     $"Growth\n     Effect: Gain {player.MaxHealth*0.25:0} health for two turns\n", 
                     $"Wither\n     Effect: Enemy -3 SPD & -3 INT\n", 
                     $"Rooted Rampage\n     Damage: {(player.LCK*1.5).ToString("0")} DMG 3-6 times\n"
@@ -1482,7 +1482,7 @@ public class RoomGenerator {
             break;
         }
         Console.WriteLine("Press any key to continue...");
-        Console.ReadLine();
+        Console.ReadKey();
         Console.Clear();
         return StayTurn;
     }
@@ -2731,7 +2731,7 @@ public class RoomGenerator {
             enemy.WriteStats();
         if (NeedInput) {
             Console.Write("\nPress any key to continue... ");
-            Console.ReadKey();
+            Console.ReadLine();
             Console.Clear();
         }
         Console.WriteLine("\n");
